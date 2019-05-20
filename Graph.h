@@ -2,62 +2,165 @@
 #define CAL_PROJECT_GRAPH_H
 
 #include <vector>
+#include <sstream>
+#include <array>
+#include <fstream>
+#include <map>
+#include <algorithm>
+#include <iostream>
+#include <cmath>
 
-template<class T> class Edge;
-template<class T> class Graph;
-template<class T> class Vertex;
+#include "graphviewer.h"
+
+template<class T>
+class Edge;
+
+template<class T>
+class Graph;
+
+template<class T>
+class Vertex;
 
 /****************** Provided structures  ********************/
 
 template<class T>
-class Vertex {
+class Vertex
+{
     T info;                // contents
     std::vector<Edge<T>> adj;  // list of outgoing edges
     bool visited;          // auxiliary field used by dfs and bfs
     int indegree;          // auxiliary field used by topsort
     bool processing;       // auxiliary field used by isDAG
 
-    void addEdge(Vertex<T>* dest, double w);
-    bool removeEdgeTo(Vertex<T>* d);
+    void addEdge(Vertex<T> *dest, double w);
+
+    bool removeEdgeTo(Vertex<T> *d);
+
 public:
     Vertex(T in);
+
     friend class Graph<T>;
 };
 
 template<class T>
-class Edge {
-    Vertex<T>* dest;       // destination vertex
+class Edge
+{
+    Vertex<T> *dest;       // destination vertex
     double weight;         // edge weight
 public:
-    Edge(Vertex<T>* d, double w);
+    Edge(Vertex<T> *d, double w);
+
     friend class Graph<T>;
+
     friend class Vertex<T>;
 };
 
 template<class T>
-class Graph {
-    std::vector<Vertex<T>*> vertexSet;    // vertex set
+class Graph
+{
+    std::vector<Vertex<T> *> vertexSet;    // vertex set
 
-    void dfsVisit(Vertex<T>* v, std::vector<T>& res) const;
-    Vertex<T>* findVertex(const T& in) const;
+
+    void dfsVisit(Vertex<T> *v, std::vector<T> &res) const;
+
+    Vertex<T> *findVertex(const int &id) const;
+
 public:
+    Graph(std::string city_name);
+
     int getNumVertex() const;
-    bool addVertex(const T& in);
-    bool removeVertex(const T& in);
-    bool addEdge(const T& sourc, const T& dest, double w);
-    bool removeEdge(const T& sourc, const T& dest);
+
+    bool addVertex(const T &in);
+
+    bool removeVertex(const T &in);
+
+    bool addEdge(const Vertex<T> *sourc, const Vertex<T> *dest, double w);
+
+    bool removeEdge(const T &sourc, const T &dest);
+
     std::vector<T> dfs() const;
 };
 
 /****************** Provided constructors and functions ********************/
+/**
+ * Build graph from map files
+ * @tparam T
+ * @param city_name
+ */
+template<class T>
+Graph<T>::Graph(std::string city_name)
+{
+    std::map<std::string, std::ifstream> input_files;
+    std::array<std::string, 4> names = {"edges", "lat_lon", "x_y", "tags"};
+    std::array<std::string, 4> file_prefixes = {"/T04_edges_", "/T04_nodes_lat_lon_", "/T04_nodes_X_Y_", "/T04_tags_"};
+
+    for (int i = 0; i < 4; ++i) {
+        std::ostringstream file_name_stream;
+        file_name_stream << "T04/" << city_name << file_prefixes[i] << city_name << ".txt";
+
+        input_files.emplace(names[i], std::ifstream(file_name_stream.str()));
+    }
+
+    std::string line;
+    std::getline(input_files["lat_lon"], line);
+    std::getline(input_files["x_y"], line);
+
+    int num_lines = std::stoi(line);
+
+    std::array<char, 3> chars_to_remove = {',', '(', ')'};
+
+    for (int i = 0; i < num_lines; ++i) {
+        int id, lat, lon, x, y;
+
+        std::getline(input_files["lat_lon"], line);
+        for (char symbol : chars_to_remove) {
+            line.erase(std::remove(line.begin(), line.end(), symbol), line.end());
+        }
+
+        std::istringstream lat_lon(line);
+        lat_lon >> id >> lat >> lon;
+
+        std::getline(input_files["x_y"], line);
+        for (char symbol : chars_to_remove) {
+            line.erase(std::remove(line.begin(), line.end(), symbol), line.end());
+        }
+
+        std::istringstream x_y(line);
+        x_y >> id >> x >> y;
+
+        this->addVertex(T(x, y, lat, lon, id));
+    }
+
+    std::getline(input_files["edges"], line);
+    num_lines = std::stoi(line);
+
+    for (int i = 0; i < num_lines; ++i) {
+        std::getline(input_files["edges"], line);
+        for (char symbol : chars_to_remove) {
+            line.erase(std::remove(line.begin(), line.end(), symbol), line.end());
+        }
+
+        int source_id, dest_id;
+        std::istringstream iss(line);
+        iss >> source_id >> dest_id;
+
+        Vertex<T> *source_vertex = this->findVertex(source_id);
+        Vertex<T> *dest_vertex = this->findVertex(dest_id);
+        double distance = sqrt(pow(source_vertex->info.getX() - dest_vertex->info.getX(), 2) +
+                               pow(source_vertex->info.getY() - dest_vertex->info.getY(), 2));
+        this->addEdge(source_vertex, dest_vertex, distance);
+    }
+}
 
 template<class T>
 Vertex<T>::Vertex(T in)
-        : info(in) { }
+        : info(in)
+{}
 
 template<class T>
-Edge<T>::Edge(Vertex<T>* d, double w)
-        : dest(d), weight(w) { }
+Edge<T>::Edge(Vertex<T> *d, double w)
+        : dest(d), weight(w)
+{}
 
 template<class T>
 int Graph<T>::getNumVertex() const
@@ -69,10 +172,10 @@ int Graph<T>::getNumVertex() const
  * Auxiliary function to find a vertex with a given content.
  */
 template<class T>
-Vertex<T>* Graph<T>::findVertex(const T& in) const
+Vertex<T> *Graph<T>::findVertex(const int &id) const
 {
     for (auto v : vertexSet)
-        if (v->info == in)
+        if (v->info.getID() == id)
             return v;
     return nullptr;
 }
@@ -82,7 +185,7 @@ Vertex<T>* Graph<T>::findVertex(const T& in) const
  *  Returns true if successful, and false if a vertex with that content already exists.
  */
 template<class T>
-bool Graph<T>::addVertex(const T& in)
+bool Graph<T>::addVertex(const T &in)
 {
     if (findVertex(in) != nullptr)
         return false;
@@ -96,10 +199,8 @@ bool Graph<T>::addVertex(const T& in)
  * Returns true if successful, and false if the source or destination vertex does not exist.
  */
 template<class T>
-bool Graph<T>::addEdge(const T& sourc, const T& dest, double w)
+bool Graph<T>::addEdge(const Vertex<T> *v1, const Vertex<T> *v2, double w)
 {
-    auto v1 = findVertex(sourc);
-    auto v2 = findVertex(dest);
     if (v1 == nullptr || v2 == nullptr)
         return false;
     v1->addEdge(v2, w);
@@ -111,9 +212,8 @@ bool Graph<T>::addEdge(const T& sourc, const T& dest, double w)
  * with a given destination vertex (d) and edge weight (w).
  */
 template<class T>
-void Vertex<T>::addEdge(Vertex<T>* d, double w)
+void Vertex<T>::addEdge(Vertex<T> *d, double w)
 {
-    // TODO (1 line)
     adj.push_back(Edge<T>(d, w));
 }
 
@@ -123,7 +223,7 @@ void Vertex<T>::addEdge(Vertex<T>* d, double w)
  * Returns true if successful, and false if such edge does not exist.
  */
 template<class T>
-bool Graph<T>::removeEdge(const T& sourc, const T& dest)
+bool Graph<T>::removeEdge(const T &sourc, const T &dest)
 {
     auto v1 = findVertex(sourc);
     auto v2 = findVertex(dest);
@@ -138,7 +238,7 @@ bool Graph<T>::removeEdge(const T& sourc, const T& dest)
  * Returns true if successful, and false if such edge does not exist.
  */
 template<class T>
-bool Vertex<T>::removeEdgeTo(Vertex<T>* d)
+bool Vertex<T>::removeEdgeTo(Vertex<T> *d)
 {
     for (auto it = adj.begin(); it != adj.end(); it++)
         if (it->dest == d) {
@@ -154,7 +254,7 @@ bool Vertex<T>::removeEdgeTo(Vertex<T>* d)
  *  Returns true if successful, and false if such vertex does not exist.
  */
 template<class T>
-bool Graph<T>::removeVertex(const T& in)
+bool Graph<T>::removeVertex(const T &in)
 {
     for (auto it = vertexSet.begin(); it != vertexSet.end(); it++)
         if ((*it)->info == in) {
@@ -190,11 +290,11 @@ std::vector<T> Graph<T>::dfs() const
  * Updates a parameter with the list of visited node contents.
  */
 template<class T>
-void Graph<T>::dfsVisit(Vertex<T>* v, std::vector<T>& res) const
+void Graph<T>::dfsVisit(Vertex<T> *v, std::vector<T> &res) const
 {
     v->visited = true;
     res.push_back(v->info);
-    for (auto& e : v->adj) {
+    for (auto &e : v->adj) {
         auto w = e.dest;
         if (!w->visited)
             dfsVisit(w, res);

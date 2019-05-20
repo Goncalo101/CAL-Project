@@ -1,8 +1,8 @@
 #include <iostream>
 #include "Graph.h"
+#include "Location.h"
 
 int main() {
-    std::cout << "Hello World" << std::endl;
-    Graph<int> graph();
+    Graph<Location> location_graph("Fafe");
 }
 
