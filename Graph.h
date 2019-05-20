@@ -65,6 +65,8 @@ class Graph
 
     Vertex<T> *findVertex(const int &id) const;
 
+    Vertex<T> *findVertex(const T& in) const;
+
 public:
     Graph(std::string city_name);
 
@@ -74,7 +76,7 @@ public:
 
     bool removeVertex(const T &in);
 
-    bool addEdge(const Vertex<T> *sourc, const Vertex<T> *dest, double w);
+    bool addEdge(Vertex<T> *v1, Vertex<T> *v2, double w);
 
     bool removeEdge(const T &sourc, const T &dest);
 
@@ -199,7 +201,7 @@ bool Graph<T>::addVertex(const T &in)
  * Returns true if successful, and false if the source or destination vertex does not exist.
  */
 template<class T>
-bool Graph<T>::addEdge(const Vertex<T> *v1, const Vertex<T> *v2, double w)
+bool Graph<T>::addEdge(Vertex<T> *v1, Vertex<T> *v2, double w)
 {
     if (v1 == nullptr || v2 == nullptr)
         return false;
@@ -299,6 +301,18 @@ void Graph<T>::dfsVisit(Vertex<T> *v, std::vector<T> &res) const
         if (!w->visited)
             dfsVisit(w, res);
     }
+}
+
+/*
+ * Auxiliary function to find a vertex with a given content.
+ */
+template<class T>
+Vertex<T>* Graph<T>::findVertex(const T& in) const
+{
+    for (auto v : vertexSet)
+        if (v->info == in)
+            return v;
+    return nullptr;
 }
 
 #endif //CAL_PROJECT_GRAPH_H

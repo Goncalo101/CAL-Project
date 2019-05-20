@@ -4,5 +4,6 @@
 
 int main() {
     Graph<Location> location_graph("Fafe");
+    location_graph.dfs();
 }
 
