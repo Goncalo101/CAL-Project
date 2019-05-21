@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <iostream>
 #include <cmath>
-
 #include "graphviewer.h"
 
 template<class T>
@@ -65,10 +64,10 @@ class Graph
 
     Vertex<T> *findVertex(const int &id) const;
 
-    Vertex<T> *findVertex(const T& in) const;
+    Vertex<T> *findVertex(const T &in) const;
 
 public:
-    Graph(std::string city_name);
+    Graph(std::string city_name, GraphViewer *gv);
 
     int getNumVertex() const;
 
@@ -90,7 +89,7 @@ public:
  * @param city_name
  */
 template<class T>
-Graph<T>::Graph(std::string city_name)
+Graph<T>::Graph(std::string city_name, GraphViewer *gv)
 {
     std::map<std::string, std::ifstream> input_files;
     std::array<std::string, 4> names = {"edges", "lat_lon", "x_y", "tags"};
@@ -131,6 +130,7 @@ Graph<T>::Graph(std::string city_name)
         x_y >> id >> x >> y;
 
         this->addVertex(T(x, y, lat, lon, id));
+        gv->addNode(x, y, id);
     }
 
     std::getline(input_files["edges"], line);
@@ -151,7 +151,12 @@ Graph<T>::Graph(std::string city_name)
         double distance = sqrt(pow(source_vertex->info.getX() - dest_vertex->info.getX(), 2) +
                                pow(source_vertex->info.getY() - dest_vertex->info.getY(), 2));
         this->addEdge(source_vertex, dest_vertex, distance);
+        gv->addEdge(i, source_vertex->info.getID(), dest_vertex->info.getID(), EdgeType::UNDIRECTED);
     }
+
+    gv->rearrange();
+
+    // TODO: Add tags
 }
 
 template<class T>
@@ -307,7 +312,7 @@ void Graph<T>::dfsVisit(Vertex<T> *v, std::vector<T> &res) const
  * Auxiliary function to find a vertex with a given content.
  */
 template<class T>
-Vertex<T>* Graph<T>::findVertex(const T& in) const
+Vertex<T> *Graph<T>::findVertex(const T &in) const
 {
     for (auto v : vertexSet)
         if (v->info == in)
