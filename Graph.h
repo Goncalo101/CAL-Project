@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <iostream>
 #include <cmath>
-#include "graphviewer.h"
+#include "graphviewer/graphviewer.h"
 
 template<class T>
 class Edge;
@@ -110,8 +110,9 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
 
     std::array<char, 3> chars_to_remove = {',', '(', ')'};
 
+    double max_x = 0, max_y = 0, min_x, min_y;
     for (int i = 0; i < num_lines; ++i) {
-        int id, lat, lon, x, y;
+        double id, lat, lon, x, y;
 
         std::getline(input_files["lat_lon"], line);
         for (char symbol : chars_to_remove) {
@@ -120,6 +121,8 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
 
         std::istringstream lat_lon(line);
         lat_lon >> id >> lat >> lon;
+        lat_lon.sync();
+        lat_lon.clear();
 
         std::getline(input_files["x_y"], line);
         for (char symbol : chars_to_remove) {
@@ -128,9 +131,19 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
 
         std::istringstream x_y(line);
         x_y >> id >> x >> y;
+        lat_lon.sync();
+        lat_lon.clear();
+
+        max_x = std::max(max_x, x);
+        max_y = std::max(max_y, y);
 
         this->addVertex(T(x, y, lat, lon, id));
-        gv->addNode(x, y, id);
+    }
+
+    for (Vertex<T> *vertex : vertexSet) {
+        int id = vertex->info.getID();
+        gv->addNode(id, vertex->info.getX() - max_x, vertex->info.getY() - max_y);
+        gv->setVertexSize(id, 10);
     }
 
     std::getline(input_files["edges"], line);
@@ -145,6 +158,8 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
         int source_id, dest_id;
         std::istringstream iss(line);
         iss >> source_id >> dest_id;
+        iss.sync();
+        iss.clear();
 
         Vertex<T> *source_vertex = this->findVertex(source_id);
         Vertex<T> *dest_vertex = this->findVertex(dest_id);
@@ -155,6 +170,7 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
     }
 
     gv->rearrange();
+    std::cout << "Graph done" << std::endl;
 
     // TODO: Add tags
 }
@@ -198,8 +214,6 @@ bool Graph<T>::addVertex(const T &in)
     vertexSet.push_back(new Vertex<T>(in));
     return true;
 }
-
-
 
 /*
  * Adds an edge to a graph (this), given the contents of the source (sourc) and

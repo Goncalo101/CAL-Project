@@ -5,5 +5,5 @@ set(CMAKE_CXX_STANDARD 11)
 add_executable(CAL-Project main.cpp
         Graph.h
         Location.cpp Location.h
-        connection.cpp connection.h edgetype.h graphviewer.cpp graphviewer.h
+        graphviewer/connection.cpp graphviewer/connection.h graphviewer/edgetype.h graphviewer/graphviewer.cpp graphviewer/graphviewer.h
         )

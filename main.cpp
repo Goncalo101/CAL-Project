@@ -39,11 +39,11 @@ vector<DeliveryPoint*> associateItems(vector<Item*> & items, Graph<Location> &gr
 
 int main()
 {
-    GraphViewer *gv = new GraphViewer(1350, 768, true);
-    gv->createWindow(1350, 768);
-    Graph<Location> graph("Fafe", gv);
+    auto *gv = new GraphViewer(750, 600, false);
+    gv->createWindow(750, 600);
+    gv->addNode(0, 0, 0);
 
-
+    Graph<Location> location_graph("Porto", gv);
 
     getchar();
 }
