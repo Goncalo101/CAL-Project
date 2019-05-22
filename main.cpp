@@ -8,7 +8,7 @@ int main()
     gv->createWindow(750, 600);
     gv->addNode(0, 0, 0);
 
-    Graph<Location> location_graph("Maia", gv);
+    Graph<Location> location_graph("Porto", gv);
 
     getchar();
 }

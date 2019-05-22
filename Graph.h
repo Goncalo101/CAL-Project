@@ -140,9 +140,6 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
         this->addVertex(T(x, y, lat, lon, id));
     }
 
-    auto x_factor = static_cast<double>(gv->getWidth()) / max_x;
-    auto y_factor = static_cast<double>(gv->getHeight()) / max_y;
-
     for (Vertex<T> *vertex : vertexSet) {
         int id = vertex->info.getID();
         double x_pos = vertex->info.getX() - max_x;
