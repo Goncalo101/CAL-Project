@@ -173,6 +173,29 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
     std::cout << "Graph done" << std::endl;
 
     // TODO: Add tags
+    std::getline(input_files["tags"], line);
+    int num_tags = stoi(line);
+
+    for (int i = 0; i < num_tags; ++i) {
+        std::getline(input_files["tags"], line);
+        line.erase(std::remove(line.begin(), line.end(), '='), line.end());
+
+        std::string tags_to_add = line;
+
+        std::getline(input_files["tags"], line);
+        int num_ids = stoi(line);
+
+        for (int j = 0; j < num_ids; ++j) {
+            std::getline(input_files["tags"], line);
+            int id = stoi(line);
+
+            Vertex<T>* vertex = findVertex(id);
+
+            if (vertex == nullptr) continue;
+
+            vertex->info.add_tag(tags_to_add);
+        }
+    }
 }
 
 template<class T>
