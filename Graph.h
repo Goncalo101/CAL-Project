@@ -32,11 +32,11 @@ class Vertex
     bool processing;       // auxiliary field used by isDAG
 
     void addEdge(Vertex<T> *dest, double w);
-
     bool removeEdgeTo(Vertex<T> *d);
 
 public:
     Vertex(T in);
+    T* getInfo();
 
     friend class Graph<T>;
 };
@@ -60,9 +60,7 @@ class Graph
     std::vector<Vertex<T> *> vertexSet;    // vertex set
 
 
-    void dfsVisit(Vertex<T> *v, std::vector<T> &res) const;
-
-    Vertex<T> *findVertex(const int &id) const;
+    void dfsVisit(Vertex<T> *v, std::vector<T*> &res) const;
 
     Vertex<T> *findVertex(const T &in) const;
 
@@ -79,7 +77,9 @@ public:
 
     bool removeEdge(const T &sourc, const T &dest);
 
-    std::vector<T> dfs() const;
+    std::vector<T*> dfs() const;
+
+    Vertex<T> *findVertex(const int &id) const;
 };
 
 /****************** Provided constructors and functions ********************/
@@ -179,8 +179,7 @@ int Graph<T>::getNumVertex() const
  * Auxiliary function to find a vertex with a given content.
  */
 template<class T>
-Vertex<T> *Graph<T>::findVertex(const int &id) const
-{
+Vertex<T> *Graph<T>::findVertex(const int &id) const {
     for (auto v : vertexSet)
         if (v->info.getID() == id)
             return v;
@@ -199,6 +198,8 @@ bool Graph<T>::addVertex(const T &in)
     vertexSet.push_back(new Vertex<T>(in));
     return true;
 }
+
+
 
 /*
  * Adds an edge to a graph (this), given the contents of the source (sourc) and
@@ -255,6 +256,11 @@ bool Vertex<T>::removeEdgeTo(Vertex<T> *d)
     return false;
 }
 
+template<class T>
+T* Vertex<T>::getInfo() {
+    return &info;
+}
+
 /*
  *  Removes a vertex with a given content (in) from a graph (this), and
  *  all outgoing and incoming edges.
@@ -281,9 +287,9 @@ bool Graph<T>::removeVertex(const T &in)
  * Follows the algorithm described in theoretical classes.
  */
 template<class T>
-std::vector<T> Graph<T>::dfs() const
+std::vector<T*> Graph<T>::dfs() const
 {
-    std::vector<T> res;
+    std::vector<T*> res;
     for (auto v : vertexSet)
         v->visited = false;
     for (auto v : vertexSet)
@@ -297,10 +303,10 @@ std::vector<T> Graph<T>::dfs() const
  * Updates a parameter with the list of visited node contents.
  */
 template<class T>
-void Graph<T>::dfsVisit(Vertex<T> *v, std::vector<T> &res) const
+void Graph<T>::dfsVisit(Vertex<T> *v, std::vector<T*> &res) const
 {
     v->visited = true;
-    res.push_back(v->info);
+    res.push_back(&(v->info));
     for (auto &e : v->adj) {
         auto w = e.dest;
         if (!w->visited)
