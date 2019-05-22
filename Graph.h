@@ -62,7 +62,7 @@ class Graph
 
     void dfsVisit(Vertex<T> *v, std::vector<T> &res) const;
 
-    Vertex<T> *findVertex(const int &id) const;
+    Vertex<T> *findVertex(const int id) const;
 
     Vertex<T> *findVertex(const T &in) const;
 
@@ -110,8 +110,9 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
 
     std::array<char, 3> chars_to_remove = {',', '(', ')'};
 
+    double max_x = 0, max_y = 0, min_x, min_y;
     for (int i = 0; i < num_lines; ++i) {
-        int id, lat, lon, x, y;
+        double id, lat, lon, x, y;
 
         std::getline(input_files["lat_lon"], line);
         for (char symbol : chars_to_remove) {
@@ -120,6 +121,8 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
 
         std::istringstream lat_lon(line);
         lat_lon >> id >> lat >> lon;
+        lat_lon.sync();
+        lat_lon.clear();
 
         std::getline(input_files["x_y"], line);
         for (char symbol : chars_to_remove) {
@@ -128,9 +131,25 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
 
         std::istringstream x_y(line);
         x_y >> id >> x >> y;
+        lat_lon.sync();
+        lat_lon.clear();
+
+        max_x = std::max(max_x, x);
+        max_y = std::max(max_y, y);
 
         this->addVertex(T(x, y, lat, lon, id));
-        gv->addNode(x, y, id);
+    }
+
+    auto x_factor = static_cast<double>(gv->getWidth()) / max_x;
+    auto y_factor = static_cast<double>(gv->getHeight()) / max_y;
+
+    for (Vertex<T> *vertex : vertexSet) {
+        int id = vertex->info.getID();
+        double x_pos = vertex->info.getX() - max_x;
+        double y_pos = vertex->info.getY() - max_y;
+        std::cout << x_pos << " " << y_pos << std::endl;
+        gv->addNode(id, x_pos, y_pos);
+        gv->setVertexSize(id, 10);
     }
 
     std::getline(input_files["edges"], line);
@@ -145,6 +164,8 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
         int source_id, dest_id;
         std::istringstream iss(line);
         iss >> source_id >> dest_id;
+        iss.sync();
+        iss.clear();
 
         Vertex<T> *source_vertex = this->findVertex(source_id);
         Vertex<T> *dest_vertex = this->findVertex(dest_id);
@@ -155,6 +176,7 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
     }
 
     gv->rearrange();
+    std::cout << "Graph done" << std::endl;
 
     // TODO: Add tags
 }
@@ -179,7 +201,7 @@ int Graph<T>::getNumVertex() const
  * Auxiliary function to find a vertex with a given content.
  */
 template<class T>
-Vertex<T> *Graph<T>::findVertex(const int &id) const
+Vertex<T> *Graph<T>::findVertex(const int id) const
 {
     for (auto v : vertexSet)
         if (v->info.getID() == id)
