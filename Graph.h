@@ -59,6 +59,9 @@ class Graph {
     std::vector<Vertex<T>*> vertexSet;    // vertex set
     void dfsVisit(Vertex<T>* v, std::vector<T*>& res) const;
     Vertex<T>* findVertex(const T& in) const;
+    array<double, 2> extract_position(std::ifstream &lat_lon_file, std::ifstream &x_y_file);
+    void extract_edges(std::ifstream &edges_file, GraphViewer* gv);
+    void extract_tags(std::ifstream &tags_file);
 
 public:
     Graph(std::string city_name, GraphViewer* gv);
@@ -79,6 +82,112 @@ public:
 };
 
 /****************** Provided constructors and functions ********************/
+
+template<class T>
+std::array<double, 2> Graph<T>::extract_position(std::ifstream &lat_lon_file, std::ifstream &x_y_file)
+{
+    std::string line;
+    std::getline(lat_lon_file, line);
+    std::getline(x_y_file, line);
+
+    int num_lines = std::stoi(line);
+
+    std::array<char, 3> chars_to_remove = {',', '(', ')'};
+
+    double max_x = 0, max_y = 0;
+    for (int i = 0; i<num_lines; ++i) {
+        double id, lat, lon, x, y;
+
+        std::getline(lat_lon_file, line);
+        for (char symbol : chars_to_remove) {
+            line.erase(std::remove(line.begin(), line.end(), symbol), line.end());
+        }
+
+        std::istringstream lat_lon(line);
+        lat_lon >> id >> lat >> lon;
+        lat_lon.sync();
+        lat_lon.clear();
+
+        std::getline(x_y_file, line);
+        for (char symbol : chars_to_remove) {
+            line.erase(std::remove(line.begin(), line.end(), symbol), line.end());
+        }
+
+        std::istringstream x_y(line);
+        x_y >> id >> x >> y;
+        lat_lon.sync();
+        lat_lon.clear();
+
+        max_x = std::max(max_x, x);
+        max_y = std::max(max_y, y);
+
+        this->addVertex(T(x, y, lat, lon, id));
+    }
+
+    return {max_x, max_y};
+}
+
+template<class T>
+void Graph<T>::extract_edges(std::ifstream &edges_file, GraphViewer* gv)
+{
+    std::string line;
+
+    std::getline(edges_file, line);
+    int num_lines = std::stoi(line);
+
+    std::array<char, 3> chars_to_remove = {',', '(', ')'};
+
+    for (int i = 0; i<num_lines; ++i) {
+        std::getline(edges_file, line);
+        for (char symbol : chars_to_remove) {
+            line.erase(std::remove(line.begin(), line.end(), symbol), line.end());
+        }
+
+        int source_id, dest_id;
+        std::istringstream iss(line);
+        iss >> source_id >> dest_id;
+        iss.sync();
+        iss.clear();
+
+        Vertex<T>* source_vertex = this->findVertex(source_id);
+        Vertex<T>* dest_vertex = this->findVertex(dest_id);
+        double distance = sqrt(pow(source_vertex->info.getX()-dest_vertex->info.getX(), 2)+
+                pow(source_vertex->info.getY()-dest_vertex->info.getY(), 2));
+        this->addEdge(source_vertex, dest_vertex, distance);
+        gv->addEdge(i, source_vertex->info.getID(), dest_vertex->info.getID(), EdgeType::UNDIRECTED);
+    }
+}
+
+template<class T>
+void Graph<T>::extract_tags(std::ifstream &tags_file)
+{
+    std::string line;
+
+    std::getline(tags_file, line);
+    int num_tags = stoi(line);
+
+    for (int i = 0; i<num_tags; ++i) {
+        std::getline(tags_file, line);
+        line.erase(std::remove(line.begin(), line.end(), '='), line.end());
+
+        std::string tags_to_add = line;
+
+        std::getline(tags_file, line);
+        int num_ids = stoi(line);
+
+        for (int j = 0; j<num_ids; ++j) {
+            std::getline(tags_file, line);
+            int id = stoi(line);
+
+            Vertex<T>* vertex = findVertex(id);
+
+            if (vertex==nullptr) continue;
+
+            vertex->info.add_tag(tags_to_add);
+        }
+    }
+}
+
 /**
  * Build graph from map files
  * @tparam T
@@ -98,100 +207,21 @@ Graph<T>::Graph(std::string city_name, GraphViewer* gv)
         input_files.emplace(names[i], std::ifstream(file_name_stream.str()));
     }
 
-    std::string line;
-    std::getline(input_files["lat_lon"], line);
-    std::getline(input_files["x_y"], line);
-
-    int num_lines = std::stoi(line);
-
-    std::array<char, 3> chars_to_remove = {',', '(', ')'};
-
-    double max_x = 0, max_y = 0, min_x, min_y;
-    for (int i = 0; i<num_lines; ++i) {
-        double id, lat, lon, x, y;
-
-        std::getline(input_files["lat_lon"], line);
-        for (char symbol : chars_to_remove) {
-            line.erase(std::remove(line.begin(), line.end(), symbol), line.end());
-        }
-
-        std::istringstream lat_lon(line);
-        lat_lon >> id >> lat >> lon;
-        lat_lon.sync();
-        lat_lon.clear();
-
-        std::getline(input_files["x_y"], line);
-        for (char symbol : chars_to_remove) {
-            line.erase(std::remove(line.begin(), line.end(), symbol), line.end());
-        }
-
-        std::istringstream x_y(line);
-        x_y >> id >> x >> y;
-        lat_lon.sync();
-        lat_lon.clear();
-
-        max_x = std::max(max_x, x);
-        max_y = std::max(max_y, y);
-
-        this->addVertex(T(x, y, lat, lon, id));
-    }
+    std::array<double, 2> pos_arr = extract_position(input_files["lat_lon"], input_files["x_y"]);
 
     for (Vertex<T>* vertex : vertexSet) {
         int id = vertex->info.getID();
-        gv->addNode(id, vertex->info.getX()-max_x, vertex->info.getY()-max_y);
+        gv->addNode(id, vertex->info.getX()-pos_arr[0], vertex->info.getY()-pos_arr[1]);
         gv->setVertexSize(id, 10);
     }
 
-    std::getline(input_files["edges"], line);
-    num_lines = std::stoi(line);
-
-    for (int i = 0; i<num_lines; ++i) {
-        std::getline(input_files["edges"], line);
-        for (char symbol : chars_to_remove) {
-            line.erase(std::remove(line.begin(), line.end(), symbol), line.end());
-        }
-
-        int source_id, dest_id;
-        std::istringstream iss(line);
-        iss >> source_id >> dest_id;
-        iss.sync();
-        iss.clear();
-
-        Vertex<T>* source_vertex = this->findVertex(source_id);
-        Vertex<T>* dest_vertex = this->findVertex(dest_id);
-        double distance = sqrt(pow(source_vertex->info.getX()-dest_vertex->info.getX(), 2)+
-                pow(source_vertex->info.getY()-dest_vertex->info.getY(), 2));
-        this->addEdge(source_vertex, dest_vertex, distance);
-        gv->addEdge(i, source_vertex->info.getID(), dest_vertex->info.getID(), EdgeType::UNDIRECTED);
-    }
+    extract_edges(input_files["edges"], gv);
 
     gv->rearrange();
     std::cout << "Graph done" << std::endl;
 
     // TODO: Add tags
-    std::getline(input_files["tags"], line);
-    int num_tags = stoi(line);
-
-    for (int i = 0; i<num_tags; ++i) {
-        std::getline(input_files["tags"], line);
-        line.erase(std::remove(line.begin(), line.end(), '='), line.end());
-
-        std::string tags_to_add = line;
-
-        std::getline(input_files["tags"], line);
-        int num_ids = stoi(line);
-
-        for (int j = 0; j<num_ids; ++j) {
-            std::getline(input_files["tags"], line);
-            int id = stoi(line);
-
-            Vertex<T>* vertex = findVertex(id);
-
-            if (vertex==nullptr) continue;
-
-            vertex->info.add_tag(tags_to_add);
-        }
-    }
+    extract_tags(input_files["tags"]);
 }
 
 template<class T>
