@@ -1,7 +1,3 @@
-//
-// Created by meias on 21-05-2019.
-//
-
 #include "InterestPoint.h"
 
 InterestPoint::InterestPoint(Location location)

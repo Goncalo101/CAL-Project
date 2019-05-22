@@ -1,7 +1,3 @@
-//
-// Created by goncalo on 20/05/19.
-//
-
 #include "Location.h"
 
 Location::Location(int x, int y, int lat, int lon, int id)

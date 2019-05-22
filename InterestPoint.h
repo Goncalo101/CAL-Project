@@ -1,7 +1,3 @@
-//
-// Created by meias on 21-05-2019.
-//
-
 #ifndef CAL_PROJECT_INTERESTPOINT_H
 #define CAL_PROJECT_INTERESTPOINT_H
 

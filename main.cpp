@@ -12,7 +12,8 @@ vector<DeliveryPoint*> associateItems(vector<Item*>& items, Graph<Location>& gra
     for (Item* item : items) {
         for (Location* location : accessible_locations) {
             if (item->getLocation()->getID()==location->getID()) {
-                if (location->getType()==UNUSED) {
+                switch (location->getType()) {
+                case UNUSED: {
                     DeliveryPoint* point = new DeliveryPoint(*location);
 
                     deliveries.push_back(point);
@@ -20,13 +21,18 @@ vector<DeliveryPoint*> associateItems(vector<Item*>& items, Graph<Location>& gra
                     point->addItem(item);
 
                     location->set_type(point->getType());
+                    break;
                 }
-                else if (location->getType()==DELIVER) {
+                case DELIVER: {
                     for (DeliveryPoint* point : deliveries) {
                         if (point->getLocation().getID()==location->getID()) {
                             point->addItem(item);
                         }
                     }
+                    break;
+                }
+
+                default:break;
                 }
             }
         }
@@ -41,7 +47,5 @@ int main()
     gv->createWindow(750, 600);
     gv->addNode(0, 0, 0);
 
-    Graph<Location> location_graph("Porto", gv);
-
-    getchar();
+    Graph<Location> location_graph("Fafe", gv);
 }
