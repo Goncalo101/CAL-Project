@@ -23,24 +23,24 @@ public:
     virtual TYPE getType();
 };
 
-class InitialPoint: public InterestPoint{
+class InitialPoint: public InterestPoint {
 public:
     InitialPoint();
     InitialPoint(Location location);
 };
 
-class FinalPoint: public InterestPoint{
+class FinalPoint: public InterestPoint {
 public:
     FinalPoint();
     FinalPoint(Location location);
 };
 
-class DeliveryPoint: public InterestPoint{
+class DeliveryPoint: public InterestPoint {
     vector<Item*> items;
 public:
     DeliveryPoint();
     DeliveryPoint(Location location);
-    void addItem(Item * item);
+    void addItem(Item* item);
     void addItems(vector<Item*> items);
     vector<Item*> getItems();
 };

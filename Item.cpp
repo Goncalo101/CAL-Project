@@ -4,13 +4,15 @@
 
 #include "Item.h"
 
-Item::Item(int weight, Location & location) : weight(weight), location(location) {
-}
+Item::Item(int weight, Location& location)
+        :weight(weight), location(location) { }
 
-int Item::getWeight() {
+int Item::getWeight()
+{
     return weight;
 }
 
-Location * Item::getLocation(){
+Location* Item::getLocation()
+{
     return &location;
 }

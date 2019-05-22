@@ -1,14 +1,14 @@
 #ifndef CAL_PROJECT_LOCATION_H
 #define CAL_PROJECT_LOCATION_H
 
-
 #include <string>
 #include <vector>
 
-enum TYPE {GARAGE, DEPOT, DELIVER, UNUSED};
+enum TYPE {
+    GARAGE, DEPOT, DELIVER, UNUSED
+};
 
-class Location
-{
+class Location {
     int x, y, lat, lon, id;
     std::vector<std::string> tags;
     TYPE type;
@@ -30,10 +30,9 @@ public:
 
     TYPE getType();
 
-    bool operator==(const Location &l1);
+    bool operator==(const Location& l1);
 
     Location();
 };
-
 
 #endif //CAL_PROJECT_LOCATION_H
