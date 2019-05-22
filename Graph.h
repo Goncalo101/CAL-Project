@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <iostream>
 #include <cmath>
-#include "graphviewer.h"
+#include "graphviewer/graphviewer.h"
 
 template<class T>
 class Edge;
@@ -142,10 +142,7 @@ Graph<T>::Graph(std::string city_name, GraphViewer *gv)
 
     for (Vertex<T> *vertex : vertexSet) {
         int id = vertex->info.getID();
-        double x_pos = vertex->info.getX() - max_x;
-        double y_pos = vertex->info.getY() - max_y;
-        std::cout << x_pos << " " << y_pos << std::endl;
-        gv->addNode(id, x_pos, y_pos);
+        gv->addNode(id, vertex->info.getX() - max_x, vertex->info.getY() - max_y);
         gv->setVertexSize(id, 10);
     }
 
