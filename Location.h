@@ -12,6 +12,8 @@ class Location
 public:
     Location(int x, int y, int lat, int lon, int id);
 
+    Location(int id);
+
     void set_tags(std::string tags);
 
     int getX() { return x; }

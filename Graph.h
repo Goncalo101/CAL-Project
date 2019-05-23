@@ -66,6 +66,11 @@ class Graph
 
     Vertex<T> *findVertex(const T &in) const;
 
+    //used in Floyd-Warshall
+    double ** W = nullptr;
+    int ** P = nullptr;
+    int findVertexIdx(const T &in) const;
+
 public:
     Graph(std::string city_name, GraphViewer *gv);
 
@@ -80,6 +85,12 @@ public:
     bool removeEdge(const T &sourc, const T &dest);
 
     std::vector<T> dfs() const;
+
+    void floydWarshallShortestPath();
+
+    vector<T> getFloydWarshallPath(const T &origin, const T &destination) const;
+
+    ~Graph();
 };
 
 /****************** Provided constructors and functions ********************/
@@ -342,4 +353,111 @@ Vertex<T> *Graph<T>::findVertex(const T &in) const
     return nullptr;
 }
 
+// ====== Floyd Warshall Algorithm =======
+/*
+ *Finds the index of a vertex with a given content
+ */
+template <class T>
+int Graph<T>::findVertexIdx(const T &in) const {
+    for (unsigned int i = 0; i < vertexSet.size(); i++) {
+        if (vertexSet[i]->info == in ) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+/*
+ * Deletes a matrix
+ */
+template <class T>
+void deleteMatrix(T ** m, int n)  {
+    if (m != nullptr) {
+        for (int i = 0; i < n; i++) {
+            if (m[i] != nullptr) {
+                delete[] m[i];
+            }
+        }
+        delete [] m;
+    }
+}
+
+/*
+ * Graph destructor
+ */
+template <class T>
+Graph<T>::~Graph() {
+    deleteMatrix(W,vertexSet.size());
+    deleteMatrix(P,vertexSet.size());
+}
+
+/*
+ * The algorithm itself
+ */
+template <class T>
+void Graph<T>::floydWarshallShortestPath() {
+    std::cout << "floyd-warshall started\n";
+    unsigned int n = vertexSet.size();
+    deleteMatrix(W,n);
+    deleteMatrix(P,n);
+
+    W = new double *[n];
+    P = new int *[n];
+
+    for (unsigned int i = 0; i < n; i++) {
+        W[i] = new double [n];
+        P[i] = new int [n];
+
+        for (unsigned int j = 0; j < n; j++) {
+            W[i][j] = i == j? 0 : INFINITY;
+            P[i][j] = -1;
+        }
+        for (auto e: vertexSet[i]->adj) {
+            int j = findVertexIdx(e.dest->info);
+            W[i][j] = e.weight;
+            P[i][j] = i;
+        }
+    }
+
+    for (unsigned int k = 0; k < n; k++) {
+        for (unsigned int i = 0; i < n; i++) {
+            for (unsigned int j = 0; j < n; j++) {
+
+                if (W[i][k] == INFINITY || W[k][j] == INFINITY) {
+                    continue;
+                }
+
+                int val = W[i][k] + W[k][j];
+                if (val < W[i][j]) {
+                    W[i][j] = val;
+                    P[i][j] = P[k][j];
+                }
+            }
+        }
+    }
+
+    std::cout << "floyd-warshall done\n";
+}
+
+template <class T>
+vector<T> Graph<T>::getFloydWarshallPath(const T &origin, const T &destination) const {
+    vector<T> res;
+    int i = findVertexIdx(origin);
+    int j = findVertexIdx(destination);
+
+    if (i == -1 || j == -1 || W[i][j] == INFINITY)  {
+        std::cout << "Path not found\n";
+        return res;
+    }
+    for ( ; j !=  -1; j = P[i][j]) {
+        res.push_back(vertexSet[j]->info);
+    }
+
+    reverse(res.begin(),res.end());
+
+    std ::cout << "Path calculated\n";
+    return res;
+}
+
 #endif //CAL_PROJECT_GRAPH_H
+

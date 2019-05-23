@@ -47,6 +47,9 @@
 .idea/**/dictionaries
 .idea/**/shelf
 
+#Because some files were being added
+.idea/
+
 # Generated files
 .idea/**/contentModel.xml
 

@@ -13,6 +13,14 @@ Location::Location(int x, int y, int lat, int lon, int id)
     this->id = id;
 }
 
+Location::Location(int id) {
+    this->id = id;
+    this->x = -1;
+    this->y = -1;
+    this->lat = -1;
+    this->lon = -1;
+}
+
 void Location::set_tags(std::string tags)
 {
     this->tags = tags;
