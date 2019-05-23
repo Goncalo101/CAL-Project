@@ -218,10 +218,9 @@ Graph<T>::Graph(std::string city_name, GraphViewer* gv)
     extract_edges(input_files["edges"], gv);
 
     gv->rearrange();
-    std::cout << "Graph done" << std::endl;
 
-    // TODO: Add tags
     extract_tags(input_files["tags"]);
+    std::cout << "Graph done" << std::endl;
 }
 
 template<class T>

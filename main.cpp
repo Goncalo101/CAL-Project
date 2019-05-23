@@ -48,4 +48,5 @@ int main()
     gv->addNode(0, 0, 0);
 
     Graph<Location> location_graph("Fafe", gv);
+    cout << location_graph.getNumVertex() << endl;
 }
