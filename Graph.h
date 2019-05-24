@@ -81,7 +81,7 @@ public:
 
     bool removeEdge(const T& sourc, const T& dest);
 
-    std::vector<T*> dfs() const;
+    std::vector<T*> dfs(Vertex<T>* v) const;
 
     void floydWarshallShortestPath();
 
@@ -360,14 +360,14 @@ bool Graph<T>::removeVertex(const T& in)
  * Follows the algorithm described in theoretical classes.
  */
 template<class T>
-std::vector<T*> Graph<T>::dfs() const
+std::vector<T*> Graph<T>::dfs(Vertex<T>* v) const
 {
     std::vector<T*> res;
     for (auto v : vertexSet)
         v->visited = false;
-    for (auto v : vertexSet)
-        if (!v->visited)
-            dfsVisit(v, res);
+
+    if (!v->visited)
+        dfsVisit(v, res);
     return res;
 }
 
