@@ -59,14 +59,14 @@ class Graph {
     std::vector<Vertex<T>*> vertexSet;    // vertex set
     void dfsVisit(Vertex<T>* v, std::vector<T*>& res) const;
     Vertex<T>* findVertex(const T& in) const;
-    array<double, 2> extract_position(std::ifstream &lat_lon_file, std::ifstream &x_y_file);
-    void extract_edges(std::ifstream &edges_file, GraphViewer* gv);
-    void extract_tags(std::ifstream &tags_file);
+    array<double, 2> extract_position(std::ifstream& lat_lon_file, std::ifstream& x_y_file);
+    void extract_edges(std::ifstream& edges_file, GraphViewer* gv);
+    void extract_tags(std::ifstream& tags_file);
 
     //used in Floyd-Warshall
-    double ** W = nullptr;
-    int ** P = nullptr;
-    int findVertexIdx(const T &in) const;
+    double** W = nullptr;
+    int** P = nullptr;
+    int findVertexIdx(const T& in) const;
 
 public:
     Graph(std::string city_name, GraphViewer* gv);
@@ -87,7 +87,7 @@ public:
 
     void floydWarshallShortestPath();
 
-    vector<T> getFloydWarshallPath(const T &origin, const T &destination) const;
+    vector<T> getFloydWarshallPath(const T& origin, const T& destination) const;
 
     ~Graph();
 
@@ -97,7 +97,7 @@ public:
 /****************** Provided constructors and functions ********************/
 
 template<class T>
-std::array<double, 2> Graph<T>::extract_position(std::ifstream &lat_lon_file, std::ifstream &x_y_file)
+std::array<double, 2> Graph<T>::extract_position(std::ifstream& lat_lon_file, std::ifstream& x_y_file)
 {
     std::string line;
     std::getline(lat_lon_file, line);
@@ -141,7 +141,7 @@ std::array<double, 2> Graph<T>::extract_position(std::ifstream &lat_lon_file, st
 }
 
 template<class T>
-void Graph<T>::extract_edges(std::ifstream &edges_file, GraphViewer* gv)
+void Graph<T>::extract_edges(std::ifstream& edges_file, GraphViewer* gv)
 {
     std::string line;
 
@@ -172,7 +172,7 @@ void Graph<T>::extract_edges(std::ifstream &edges_file, GraphViewer* gv)
 }
 
 template<class T>
-void Graph<T>::extract_tags(std::ifstream &tags_file)
+void Graph<T>::extract_tags(std::ifstream& tags_file)
 {
     std::string line;
 
@@ -411,10 +411,11 @@ vector<Vertex<T>*> Graph<T>::getVertexes() const {
 /*
  *Finds the index of a vertex with a given content
  */
-template <class T>
-int Graph<T>::findVertexIdx(const T &in) const {
-    for (unsigned int i = 0; i < vertexSet.size(); i++) {
-        if (vertexSet[i]->info == in ) {
+template<class T>
+int Graph<T>::findVertexIdx(const T& in) const
+{
+    for (unsigned int i = 0; i<vertexSet.size(); i++) {
+        if (vertexSet[i]->info==in) {
             return i;
         }
     }
@@ -424,46 +425,49 @@ int Graph<T>::findVertexIdx(const T &in) const {
 /*
  * Deletes a matrix
  */
-template <class T>
-void deleteMatrix(T ** m, int n)  {
-    if (m != nullptr) {
-        for (int i = 0; i < n; i++) {
-            if (m[i] != nullptr) {
+template<class T>
+void deleteMatrix(T** m, int n)
+{
+    if (m!=nullptr) {
+        for (int i = 0; i<n; i++) {
+            if (m[i]!=nullptr) {
                 delete[] m[i];
             }
         }
-        delete [] m;
+        delete[] m;
     }
 }
 
 /*
  * Graph destructor
  */
-template <class T>
-Graph<T>::~Graph() {
-    deleteMatrix(W,vertexSet.size());
-    deleteMatrix(P,vertexSet.size());
+template<class T>
+Graph<T>::~Graph()
+{
+    deleteMatrix(W, vertexSet.size());
+    deleteMatrix(P, vertexSet.size());
 }
 
 /*
  * The algorithm itself
  */
-template <class T>
-void Graph<T>::floydWarshallShortestPath() {
+template<class T>
+void Graph<T>::floydWarshallShortestPath()
+{
     std::cout << "floyd-warshall started\n";
     unsigned int n = vertexSet.size();
-    deleteMatrix(W,n);
-    deleteMatrix(P,n);
+    deleteMatrix(W, n);
+    deleteMatrix(P, n);
 
-    W = new double *[n];
-    P = new int *[n];
+    W = new double* [n];
+    P = new int* [n];
 
-    for (unsigned int i = 0; i < n; i++) {
-        W[i] = new double [n];
-        P[i] = new int [n];
+    for (unsigned int i = 0; i<n; i++) {
+        W[i] = new double[n];
+        P[i] = new int[n];
 
-        for (unsigned int j = 0; j < n; j++) {
-            W[i][j] = i == j? 0 : INFINITY;
+        for (unsigned int j = 0; j<n; j++) {
+            W[i][j] = i==j ? 0 : INFINITY;
             P[i][j] = -1;
         }
         for (auto e: vertexSet[i]->adj) {
@@ -473,16 +477,16 @@ void Graph<T>::floydWarshallShortestPath() {
         }
     }
 
-    for (unsigned int k = 0; k < n; k++) {
-        for (unsigned int i = 0; i < n; i++) {
-            for (unsigned int j = 0; j < n; j++) {
+    for (unsigned int k = 0; k<n; k++) {
+        for (unsigned int i = 0; i<n; i++) {
+            for (unsigned int j = 0; j<n; j++) {
 
-                if (W[i][k] == INFINITY || W[k][j] == INFINITY) {
+                if (W[i][k]==INFINITY || W[k][j]==INFINITY) {
                     continue;
                 }
 
-                int val = W[i][k] + W[k][j];
-                if (val < W[i][j]) {
+                int val = W[i][k]+W[k][j];
+                if (val<W[i][j]) {
                     W[i][j] = val;
                     P[i][j] = P[k][j];
                 }
@@ -493,23 +497,24 @@ void Graph<T>::floydWarshallShortestPath() {
     std::cout << "floyd-warshall done\n";
 }
 
-template <class T>
-vector<T> Graph<T>::getFloydWarshallPath(const T &origin, const T &destination) const {
+template<class T>
+vector<T> Graph<T>::getFloydWarshallPath(const T& origin, const T& destination) const
+{
     vector<T> res;
     int i = findVertexIdx(origin);
     int j = findVertexIdx(destination);
 
-    if (i == -1 || j == -1 || W[i][j] == INFINITY)  {
+    if (i==-1 || j==-1 || W[i][j]==INFINITY) {
         std::cout << "Path not found\n";
         return res;
     }
-    for ( ; j !=  -1; j = P[i][j]) {
+    for (; j!=-1; j = P[i][j]) {
         res.push_back(vertexSet[j]->info);
     }
 
-    reverse(res.begin(),res.end());
+    reverse(res.begin(), res.end());
 
-    std ::cout << "Path calculated\n";
+    std::cout << "Path calculated\n";
     return res;
 }
 
