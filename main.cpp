@@ -63,8 +63,9 @@ int main(int argc, char* argv[])
 
     GraphViewer* gv = init_viewer(700, 600);
 
-    Location loc1 = Location(402328881);
-    Location loc2 = Location(402328963);
+
+    Location loc1 = Location(402328904);
+    Location loc2 = Location(402328897);
 
     Graph<Location> location_graph(city_name, gv);
 
@@ -73,6 +74,11 @@ int main(int argc, char* argv[])
     //this will probably be inside some funtion in the future
     location_graph.floydWarshallShortestPath();
     vector<Location> path = location_graph.getFloydWarshallPath(loc1, loc2);
+
+    cout << "First try\n";
+    for (int l = 0; l < path.size(); l++) {
+        std::cout << path[l].getID() << endl;
+    }
 
     if (!path.empty()) {
         gv->setVertexColor(path[0].getID(), "blue");

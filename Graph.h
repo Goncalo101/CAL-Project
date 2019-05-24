@@ -9,7 +9,10 @@
 #include <algorithm>
 #include <iostream>
 #include <cmath>
+#include <omp.h>
 #include "graphviewer/graphviewer.h"
+
+#define INF std::numeric_limits<double>::max()
 
 template<class T>
 class Edge;
@@ -81,7 +84,7 @@ public:
 
     bool removeEdge(const T& sourc, const T& dest);
 
-    std::vector<T*> dfs(Vertex<T>* v) const;
+    std::vector<T*> dfs() const;
 
     void floydWarshallShortestPath();
 
@@ -164,6 +167,8 @@ void Graph<T>::extract_edges(std::ifstream& edges_file, GraphViewer* gv)
         Vertex<T>* dest_vertex = this->findVertex(dest_id);
         double distance = sqrt(pow(source_vertex->info.getX()-dest_vertex->info.getX(), 2)+
                 pow(source_vertex->info.getY()-dest_vertex->info.getY(), 2));
+
+        this->addEdge(dest_vertex, source_vertex, distance);
         this->addEdge(source_vertex, dest_vertex, distance);
         gv->addEdge(i, source_vertex->info.getID(), dest_vertex->info.getID(), EdgeType::UNDIRECTED);
     }
@@ -360,8 +365,9 @@ bool Graph<T>::removeVertex(const T& in)
  * Follows the algorithm described in theoretical classes.
  */
 template<class T>
-std::vector<T*> Graph<T>::dfs(Vertex<T>* v) const
+std::vector<T*> Graph<T>::dfs() const
 {
+    Vertex<T>* v = this->vertexSet[0];
     std::vector<T*> res;
     for (auto vertex : vertexSet)
         vertex->visited = false;
@@ -454,12 +460,15 @@ void Graph<T>::floydWarshallShortestPath()
     W = new double* [n];
     P = new int* [n];
 
+    omp_lock_t write_lock;
+    omp_init_lock(&write_lock);
+
     for (unsigned int i = 0; i<n; i++) {
         W[i] = new double[n];
         P[i] = new int[n];
 
         for (unsigned int j = 0; j<n; j++) {
-            W[i][j] = i==j ? 0 : INFINITY;
+            W[i][j] = i==j ? 0 : INF;
             P[i][j] = -1;
         }
         for (auto e: vertexSet[i]->adj) {
@@ -470,21 +479,32 @@ void Graph<T>::floydWarshallShortestPath()
     }
 
     for (unsigned int k = 0; k<n; k++) {
+
+        #pragma omp parallel for shared(W, P)
         for (unsigned int i = 0; i<n; i++) {
+
+            if (W[i][k] == INF) {
+                continue;
+            }
+
             for (unsigned int j = 0; j<n; j++) {
 
-                if (W[i][k]==INFINITY || W[k][j]==INFINITY) {
+                if (W[k][j]==INF) {
                     continue;
                 }
 
                 int val = W[i][k]+W[k][j];
                 if (val<W[i][j]) {
+                    //omp_set_lock(&write_lock);
                     W[i][j] = val;
                     P[i][j] = P[k][j];
+                    //omp_unset_lock(&write_lock);
                 }
             }
         }
     }
+
+    omp_destroy_lock(&write_lock);
 
     std::cout << "floyd-warshall done\n";
 }
@@ -496,7 +516,8 @@ vector<T> Graph<T>::getFloydWarshallPath(const T& origin, const T& destination) 
     int i = findVertexIdx(origin);
     int j = findVertexIdx(destination);
 
-    if (i==-1 || j==-1 || W[i][j]==INFINITY) {
+    if (i==-1 || j==-1 || W[i][j]==INF) {
+
         std::cout << "Path not found\n";
         return res;
     }
@@ -507,6 +528,7 @@ vector<T> Graph<T>::getFloydWarshallPath(const T& origin, const T& destination) 
     reverse(res.begin(), res.end());
 
     std::cout << "Path calculated\n";
+
     return res;
 }
 
