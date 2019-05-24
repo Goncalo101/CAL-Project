@@ -67,6 +67,8 @@ class Graph
 public:
     Graph(std::string city_name, GraphViewer *gv);
 
+    vector<Vertex<T> *> getVertexes();
+
     int getNumVertex() const;
 
     bool addVertex(const T &in);
@@ -361,6 +363,11 @@ Vertex<T> *Graph<T>::findVertex(const T &in) const
         if (v->info == in)
             return v;
     return nullptr;
+}
+
+template<class T>
+vector<Vertex<T> *> Graph<T>::getVertexes() {
+    return vertexSet;
 }
 
 #endif //CAL_PROJECT_GRAPH_H
