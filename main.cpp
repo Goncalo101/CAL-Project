@@ -41,8 +41,18 @@ vector<DeliveryPoint*> associateItems(vector<Item*>& items, Graph<Location>& gra
     return deliveries;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc != 2) {
+        cout << "Usage: " << argv[0] << " <city name>" << endl;
+        exit(1);
+    }
+
+    string city_name(argv[1]);
+    transform(city_name.begin(), city_name.end(), city_name.begin(), ::toupper);
+    transform(city_name.begin() + 1, city_name.end(), city_name.begin() + 1, ::tolower);
+
+
     auto* gv = new GraphViewer(750, 600, false);
     gv->createWindow(750, 600);
     gv->addNode(0, 0, 0);
@@ -50,7 +60,7 @@ int main()
     Location loc1 = Location(402328881);
     Location loc2 = Location(402328911);
 
-    Graph<Location> location_graph("Fafe", gv);
+    Graph<Location> location_graph(city_name, gv);
 
     cout << location_graph.getNumVertex() << endl;
 
