@@ -58,9 +58,7 @@ int main()
     location_graph.floydWarshallShortestPath();
     vector<Location> path = location_graph.getFloydWarshallPath(loc1, loc2);
 
-    if (path.size() == 0) {
-    }
-    else {
+    if (!path.empty()){
         gv->setVertexColor(path[0].getID(),"blue");
         for (int i = 1; i < path.size(); i++) {
             gv->setVertexColor(path[i].getID(),"green");
