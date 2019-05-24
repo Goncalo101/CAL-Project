@@ -363,8 +363,8 @@ template<class T>
 std::vector<T*> Graph<T>::dfs(Vertex<T>* v) const
 {
     std::vector<T*> res;
-    for (auto v : vertexSet)
-        v->visited = false;
+    for (auto vertex : vertexSet)
+        vertex->visited = false;
 
     if (!v->visited)
         dfsVisit(v, res);
