@@ -21,8 +21,7 @@ vector<Location*> getPossibleFinalLocations(vector<Location *> &accessible_locat
 
     for (Location *location : accessible_locations) {
         for (string tag : location->getTags()) {
-            if (tag.find("building=warehouse") != string::npos || tag.find("industrial=warehouse") != string::npos ||
-                    tag.find("landuse=industrial") != string::npos || tag.find("amenity=loading_dock") != string::npos) {
+            if (tag.find("building=warehouse") != string::npos) {
                 finals.push_back(location);
                 break;
             }
@@ -84,8 +83,7 @@ vector<Location*> getPossibleInitialLocations(Graph<Location> & graph){
 
     for (Vertex<Location> *vertex : graph.getVertexes()) {
         for (string tag : vertex->getInfo()->getTags()) {
-            if (tag.find("building=warehouse") != string::npos || tag.find("industrial=warehouse") != string::npos ||
-                tag.find("landuse=industrial") != string::npos || tag.find("amenity=loading_dock") != string::npos) {
+            if (tag.find("amenity=loading_dock") != string::npos) {
                 initials.push_back(vertex->getInfo());
                 break;
             }
@@ -99,26 +97,24 @@ int main()
     gv->createWindow(750, 600);
     gv->addNode(0, 0, 0);
 
-    Graph<Location> location_graph("Fafe", gv);
+    Graph<Location> graph("Fafe", gv);
 
-    cout << location_graph.getNumVertex() << endl;
+    cout << graph.getNumVertex() << endl;
 
-    /* DEFINE VERTEXES
-     *
-     * vector<Location*> initials = getPossibleInitialLocations(graph);
-     *
-     *      *DECIDE ON A INITIAL VERTEX
-     *
-     Vertex<Location> *initial_vertex = graph.findVertex(initial->getLocation().getID());
+    vector<Location*> initial_points = getPossibleInitialLocations(graph);
 
-     vector<Location*> accessible_locations = graph.dfs(initial_vertex);
+    Vertex<Location> *initial_vertex = graph.findVertex(initial_points[0]->getID());
 
-     vector<Location*> final_points = getPossibleFinalLocations(graph, accessible_locations);
+    InitialPoint *initial = new InitialPoint(*initial_points[0]);
 
-            DECIDE ON A FINAL POINT(S)
+    vector<Location*> accessible_locations = graph.dfs(initial_vertex);
 
-     vector<DeliveryPoint*> deliveries = associateItems(items, graph, accessible_locations);
-     */
+    vector<Location*> final_points = getPossibleFinalLocations(accessible_locations);
+
+    FinalPoint *final = new FinalPoint(*final_points[0]);
+
+    vector<DeliveryPoint*> deliveries = associateItems(items, accessible_locations);
+
 
 
     if (path.size() == 0) {
