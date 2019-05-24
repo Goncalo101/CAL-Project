@@ -74,6 +74,8 @@ class Graph {
 public:
     Graph(std::string city_name, GraphViewer* gv);
 
+    vector<Vertex<T> *> getVertexes() const;
+
     int getNumVertex() const;
 
     bool addVertex(const T& in);
@@ -84,7 +86,7 @@ public:
 
     bool removeEdge(const T& sourc, const T& dest);
 
-    std::vector<T*> dfs() const;
+    std::vector<T*> dfs(Vertex<T>* v) const;
 
     void floydWarshallShortestPath();
 
@@ -239,6 +241,7 @@ Graph<T>::Graph(std::string city_name, GraphViewer* gv)
     std::cout << "Graph done" << std::endl;
 }
 
+
 template<class T>
 Vertex<T>::Vertex(T in)
         : info(in) { }
@@ -365,10 +368,9 @@ bool Graph<T>::removeVertex(const T& in)
  * Follows the algorithm described in theoretical classes.
  */
 template<class T>
-std::vector<T*> Graph<T>::dfs() const
-{
-    Vertex<T>* v = this->vertexSet[0];
+std::vector<T*> Graph<T>::dfs(Vertex<T>* v) const{
     std::vector<T*> res;
+
     for (auto vertex : vertexSet)
         vertex->visited = false;
 
@@ -403,6 +405,11 @@ Vertex<T>* Graph<T>::findVertex(const T& in) const
         if (v->info==in)
             return v;
     return nullptr;
+}
+
+template <class T>
+vector<Vertex<T>*> Graph<T>::getVertexes() const {
+    return vertexSet;
 }
 
 // ====== Floyd Warshall Algorithm =======
@@ -460,8 +467,8 @@ void Graph<T>::floydWarshallShortestPath()
     W = new double* [n];
     P = new int* [n];
 
-    omp_lock_t write_lock;
-    omp_init_lock(&write_lock);
+    //omp_lock_t write_lock;
+    //omp_init_lock(&write_lock);
 
     for (unsigned int i = 0; i<n; i++) {
         W[i] = new double[n];
@@ -480,7 +487,7 @@ void Graph<T>::floydWarshallShortestPath()
 
     for (unsigned int k = 0; k<n; k++) {
 
-        #pragma omp parallel for shared(W, P)
+        //#pragma omp parallel for shared(W, P)
         for (unsigned int i = 0; i<n; i++) {
 
             if (W[i][k] == INF) {
@@ -504,7 +511,7 @@ void Graph<T>::floydWarshallShortestPath()
         }
     }
 
-    omp_destroy_lock(&write_lock);
+    //omp_destroy_lock(&write_lock);
 
     std::cout << "floyd-warshall done\n";
 }

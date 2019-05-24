@@ -4,41 +4,93 @@
 #include "Item.h"
 #include "InterestPoint.h"
 
-vector<DeliveryPoint*> associateItems(vector<Item*>& items, Graph<Location>& graph)
-{
-    vector<Location*> accessible_locations = graph.dfs();
-    vector<DeliveryPoint*> deliveries;
 
-    for (Item* item : items) {
-        for (Location* location : accessible_locations) {
-            if (item->getLocation()->getID()==location->getID()) {
-                switch (location->getType()) {
-                case UNUSED: {
-                    DeliveryPoint* point = new DeliveryPoint(*location);
+void deleteUnusedVertexes(Graph<Location>& graph){
+    vector<Vertex<Location>*> locations = graph.getVertexes();
 
-                    deliveries.push_back(point);
+    for(Vertex<Location> *vertex : locations){
+        if(vertex->getInfo()->getType() == UNUSED){
+            graph.removeVertex(*vertex->getInfo());
+        }
+    }
+}
 
-                    point->addItem(item);
 
-                    location->set_type(point->getType());
-                    break;
-                }
-                case DELIVER: {
-                    for (DeliveryPoint* point : deliveries) {
-                        if (point->getLocation().getID()==location->getID()) {
-                            point->addItem(item);
-                        }
+vector<Location*> getPossibleFinalLocations(vector<Location *> &accessible_locations){
+    vector<Location*> finals;
+
+    for (Location *location : accessible_locations) {
+        for (string tag : location->getTags()) {
+            if (tag.find("building=warehouse") != string::npos || tag.find("industrial=warehouse") != string::npos ||
+                    tag.find("landuse=industrial") != string::npos || tag.find("amenity=loading_dock") != string::npos) {
+                finals.push_back(location);
+                break;
+            }
+        }
+    }
+}
+
+vector<DeliveryPoint*> associateItems(vector<Item*>& items, vector<Location *> &accessible_locations) {
+    vector<DeliveryPoint *> deliveries;
+    bool shop;
+
+    for (Item *item : items) {
+        for (Location *location : accessible_locations) {
+            if (item->getLocation()->getID() == location->getID()) {
+                shop = false;
+
+                for (string tag : location->getTags()) {
+                    if (tag.find("shop") != string::npos) {
+                        shop = true;
+                        break;
                     }
-                    break;
                 }
 
-                default:break;
+                if(shop){
+                    continue;
+                }
+
+                switch (location->getType()) {
+                    case UNUSED: {
+                        DeliveryPoint *point = new DeliveryPoint(*location);
+
+                        deliveries.push_back(point);
+
+                        point->addItem(item);
+
+                        location->set_type(point->getType());
+                        break;
+                    }
+                    case DELIVER: {
+                        for (DeliveryPoint *point : deliveries) {
+                            if (point->getLocation().getID() == location->getID()) {
+                                point->addItem(item);
+                            }
+                        }
+                        break;
+                    }
+                    default:
+                        break;
                 }
             }
         }
     }
 
     return deliveries;
+}
+
+vector<Location*> getPossibleInitialLocations(Graph<Location> & graph){
+    vector<Location*> initials;
+
+    for (Vertex<Location> *vertex : graph.getVertexes()) {
+        for (string tag : vertex->getInfo()->getTags()) {
+            if (tag.find("building=warehouse") != string::npos || tag.find("industrial=warehouse") != string::npos ||
+                tag.find("landuse=industrial") != string::npos || tag.find("amenity=loading_dock") != string::npos) {
+                initials.push_back(vertex->getInfo());
+                break;
+            }
+        }
+    }
 }
 
 GraphViewer* init_viewer(int width, int height)
@@ -70,6 +122,23 @@ int main(int argc, char* argv[])
     Graph<Location> location_graph(city_name, gv);
 
     cout << location_graph.getNumVertex() << endl;
+
+    /* DEFINE VERTEXES
+     *
+     * vector<Location*> initials = getPossibleInitialLocations(graph);
+     *
+     *      *DECIDE ON A INITIAL VERTEX
+     *
+     Vertex<Location> *initial_vertex = graph.findVertex(initial->getLocation().getID());
+
+     vector<Location*> accessible_locations = graph.dfs(initial_vertex);
+
+     vector<Location*> final_points = getPossibleFinalLocations(graph, accessible_locations);
+
+            DECIDE ON A FINAL POINT(S)
+
+     vector<DeliveryPoint*> deliveries = associateItems(items, graph, accessible_locations);
+     */
 
     //this will probably be inside some funtion in the future
     location_graph.floydWarshallShortestPath();
