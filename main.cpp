@@ -118,26 +118,23 @@ int main(int argc, char* argv[])
     Location loc1 = Location(402328881);
     Location loc2 = Location(402328963);
 
-    Graph<Location> location_graph(city_name, gv);
+    Graph<Location> graph(city_name, gv);
 
-    cout << location_graph.getNumVertex() << endl;
+    cout << graph.getNumVertex() << endl;
 
-    /* DEFINE VERTEXES
-     *
-     * vector<Location*> initials = getPossibleInitialLocations(graph);
-     *
-     *      *DECIDE ON A INITIAL VERTEX
-     *
-     Vertex<Location> *initial_vertex = graph.findVertex(initial->getLocation().getID());
+    vector<Location*> initial_points = getPossibleInitialLocations(graph);
 
-     vector<Location*> accessible_locations = graph.dfs(initial_vertex);
+    Vertex<Location> *initial_vertex = graph.findVertex(initial_points[0]->getID());
 
-     vector<Location*> final_points = getPossibleFinalLocations(graph, accessible_locations);
+    InitialPoint *initial = new InitialPoint(*initial_points[0]);
 
-            DECIDE ON A FINAL POINT(S)
+    vector<Location*> accessible_locations = graph.dfs(initial_vertex);
 
-     vector<DeliveryPoint*> deliveries = associateItems(items, graph, accessible_locations);
-     */
+    vector<Location*> final_points = getPossibleFinalLocations(accessible_locations);
+
+    FinalPoint *final = new FinalPoint(*final_points[0]);
+
+    vector<DeliveryPoint*> deliveries = associateItems(items, accessible_locations);
 
     //this will probably be inside some funtion in the future
     location_graph.floydWarshallShortestPath();
