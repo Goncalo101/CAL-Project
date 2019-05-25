@@ -122,23 +122,22 @@ int main(int argc, char* argv[])
 
     cout << graph.getNumVertex() << endl;
 
+    vector<Item*> items;
+
     vector<Location*> initial_points = getPossibleInitialLocations(graph);
-
     Vertex<Location> *initial_vertex = graph.findVertex(initial_points[0]->getID());
-
     InitialPoint *initial = new InitialPoint(*initial_points[0]);
 
     vector<Location*> accessible_locations = graph.dfs(initial_vertex);
 
     vector<Location*> final_points = getPossibleFinalLocations(accessible_locations);
-
     FinalPoint *final = new FinalPoint(*final_points[0]);
 
     vector<DeliveryPoint*> deliveries = associateItems(items, accessible_locations);
 
     //this will probably be inside some funtion in the future
-    location_graph.floydWarshallShortestPath();
-    vector<Location> path = location_graph.getFloydWarshallPath(loc1, loc2);
+    graph.floydWarshallShortestPath();
+    vector<Location> path = graph.getFloydWarshallPath(loc1, loc2);
 
     if (!path.empty()) {
         gv->setVertexColor(path[0].getID(), "blue");
