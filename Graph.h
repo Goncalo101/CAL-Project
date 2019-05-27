@@ -11,6 +11,8 @@
 #include <cmath>
 #include "graphviewer/graphviewer.h"
 
+#define INF std::numeric_limits<double>::max()
+
 template<class T>
 class Edge;
 
@@ -71,7 +73,7 @@ class Graph {
 public:
     Graph(std::string city_name, GraphViewer* gv);
 
-    vector<Vertex<T> *> getVertexes() const;
+    vector<Vertex<T>*> getVertexes() const;
 
     int getNumVertex() const;
 
@@ -235,7 +237,6 @@ Graph<T>::Graph(std::string city_name, GraphViewer* gv)
     std::cout << "Graph done" << std::endl;
 }
 
-
 template<class T>
 Vertex<T>::Vertex(T in)
         : info(in) { }
@@ -362,7 +363,8 @@ bool Graph<T>::removeVertex(const T& in)
  * Follows the algorithm described in theoretical classes.
  */
 template<class T>
-std::vector<T*> Graph<T>::dfs(Vertex<T>* v) const{
+std::vector<T*> Graph<T>::dfs(Vertex<T>* v) const
+{
     std::vector<T*> res;
 
     for (auto vertex : vertexSet)
@@ -401,8 +403,9 @@ Vertex<T>* Graph<T>::findVertex(const T& in) const
     return nullptr;
 }
 
-template <class T>
-vector<Vertex<T>*> Graph<T>::getVertexes() const {
+template<class T>
+vector<Vertex<T>*> Graph<T>::getVertexes() const
+{
     return vertexSet;
 }
 
@@ -466,7 +469,7 @@ void Graph<T>::floydWarshallShortestPath()
         P[i] = new int[n];
 
         for (unsigned int j = 0; j<n; j++) {
-            W[i][j] = i==j ? 0 : INFINITY;
+            W[i][j] = i==j ? 0 : INF;
             P[i][j] = -1;
         }
         for (auto e: vertexSet[i]->adj) {
@@ -480,7 +483,7 @@ void Graph<T>::floydWarshallShortestPath()
         for (unsigned int i = 0; i<n; i++) {
             for (unsigned int j = 0; j<n; j++) {
 
-                if (W[i][k]==INFINITY || W[k][j]==INFINITY) {
+                if (W[i][k]==INF || W[k][j]==INF) {
                     continue;
                 }
 
@@ -503,7 +506,7 @@ vector<T> Graph<T>::getFloydWarshallPath(const T& origin, const T& destination) 
     int i = findVertexIdx(origin);
     int j = findVertexIdx(destination);
 
-    if (i==-1 || j==-1 || W[i][j]==INFINITY) {
+    if (i==-1 || j==-1 || W[i][j]==INF) {
         std::cout << "Path not found\n";
         return res;
     }
@@ -516,8 +519,6 @@ vector<T> Graph<T>::getFloydWarshallPath(const T& origin, const T& destination) 
     std::cout << "Path calculated\n";
     return res;
 }
-
-
 
 #endif //CAL_PROJECT_GRAPH_H
 
