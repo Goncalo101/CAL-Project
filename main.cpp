@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 
     // compute valid locations for the final points and pick one
     vector<Location*> final_points = getPossibleFinalLocations(accessible_locations);
-    FinalPoint* final = new FinalPoint(*final_points[0]);
+//    FinalPoint* final = new FinalPoint(*final_points[1]);
 
     // TODO: get items from file or generate random items
     vector<Item*> items;
@@ -146,15 +146,15 @@ int main(int argc, char* argv[])
     // compute all pairs shortest path
     graph.floydWarshallShortestPath();
 
-//     vector<Location> path = graph.getFloydWarshallPath(loc1, loc2);
+    vector<Location> path = graph.getFloydWarshallPath(Location(26130636), Location(1241362561));
 
-// if (!path.empty()) {
-//        gv->setVertexColor(path[0].getID(), "blue");
-//        for (int i = 1; i<path.size(); i++) {
-//            gv->setVertexColor(path[i].getID(), "green");
-//        }
-//        gv->setVertexColor(path[path.size()-1].getID(), "cyan");
-//    }
+    if (!path.empty()) {
+        gv->setVertexColor(path[0].getID(), "blue");
+        for (int i = 1; i<path.size(); i++) {
+            gv->setVertexColor(path[i].getID(), "green");
+        }
+        gv->setVertexColor(path[path.size()-1].getID(), "red");
+    }
 
     getchar();
 }

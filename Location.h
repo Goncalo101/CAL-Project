@@ -19,16 +19,20 @@ public:
     Location(int id);
 
     void set_tags(std::string tags);
-    
+
     void add_tag(std::string tag);
 
     void set_type(TYPE type);
 
-    int getX() { return x; }
+    double getX() { return x; }
 
-    int getY() { return y; }
+    double getY() { return y; }
 
-    int getID() { return id; }
+    void setX(int x) { this->x = x; }
+
+    void setY(int y) { this->y = y; }
+
+    double getID() { return id; }
 
     std::vector<std::string> getTags();
 

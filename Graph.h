@@ -237,6 +237,8 @@ Graph<T>::Graph(const std::string& city_name, GraphViewer* gv)
         gv->addNode(id, vertex->info.getX()-pos_arr[0], vertex->info.getY()-pos_arr[1]);
         gv->setVertexLabel(id, to_string(id));
         gv->setVertexSize(id, 10);
+        vertex->info.setX(vertex->info.getX()-pos_arr[0]);
+        vertex->info.setY(vertex->info.getY()-pos_arr[1]);
     }
 
     extract_edges(input_files["edges"], gv);
@@ -526,6 +528,10 @@ vector<T> Graph<T>::getFloydWarshallPath(const T& origin, const T& destination) 
     vector<T> res;
     int i = findVertexIdx(origin);
     int j = findVertexIdx(destination);
+
+    if (j < i) {
+        std::swap(i, j);
+    }
 
     if (i==-1 || j==-1 || W[i][j]==INF) {
         std::cout << "Path not found\n";
