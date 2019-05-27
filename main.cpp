@@ -28,6 +28,8 @@ vector<Location*> getPossibleFinalLocations(vector<Location *> &accessible_locat
             }
         }
     }
+
+    return finals;
 }
 
 vector<DeliveryPoint*> associateItems(vector<Item*>& items, vector<Location *> &accessible_locations) {
@@ -91,6 +93,8 @@ vector<Location*> getPossibleInitialLocations(Graph<Location> & graph){
             }
         }
     }
+
+    return initials;
 }
 
 GraphViewer* init_viewer(int width, int height)

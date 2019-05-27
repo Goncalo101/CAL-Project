@@ -181,7 +181,6 @@ void Graph<T>::extract_tags(std::ifstream& tags_file)
 
     for (int i = 0; i<num_tags; ++i) {
         std::getline(tags_file, line);
-        line.erase(std::remove(line.begin(), line.end(), '='), line.end());
 
         std::string tags_to_add = line;
 
