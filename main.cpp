@@ -133,6 +133,9 @@ int main(int argc, char* argv[])
     InitialPoint *initial = new InitialPoint(*initial_points[0]);
 
     vector<Location*> accessible_locations = graph.dfs(initial_vertex);
+    graph.delete_inaccessible();
+
+    cout << graph.getNumVertex() << endl;
 
     vector<Location*> final_points = getPossibleFinalLocations(accessible_locations);
     FinalPoint *final = new FinalPoint(*final_points[0]);

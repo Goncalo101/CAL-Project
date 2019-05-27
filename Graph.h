@@ -37,7 +37,7 @@ class Vertex {
     bool removeEdgeTo(Vertex<T>* d);
 
 public:
-    Vertex(T in);
+    explicit Vertex(T in);
 
     T* getInfo();
 
@@ -71,7 +71,7 @@ class Graph {
     int findVertexIdx(const T& in) const;
 
 public:
-    Graph(std::string city_name, GraphViewer* gv);
+    Graph(const std::string& city_name, GraphViewer* gv);
 
     vector<Vertex<T>*> getVertexes() const;
 
@@ -94,6 +94,7 @@ public:
     ~Graph();
 
     Vertex<T>* findVertex(const int& id) const;
+    void delete_inaccessible();
 };
 
 /****************** Provided constructors and functions ********************/
@@ -208,7 +209,7 @@ void Graph<T>::extract_tags(std::ifstream& tags_file)
  * @param city_name
  */
 template<class T>
-Graph<T>::Graph(std::string city_name, GraphViewer* gv)
+Graph<T>::Graph(const std::string& city_name, GraphViewer* gv)
 {
     std::map<std::string, std::ifstream> input_files;
     std::array<std::string, 4> names = {"edges", "lat_lon", "x_y", "tags"};
@@ -497,6 +498,15 @@ void Graph<T>::floydWarshallShortestPath()
     }
 
     std::cout << "floyd-warshall done\n";
+}
+
+template<class T>
+void Graph<T>::delete_inaccessible()
+{
+    for (auto vertex : vertexSet) {
+        if (!vertex->visited)
+            this->removeVertex(vertex->info);
+    }
 }
 
 template<class T>
