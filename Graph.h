@@ -102,6 +102,9 @@ public:
 template<class T>
 std::array<double, 2> Graph<T>::extract_position(std::ifstream& lat_lon_file, std::ifstream& x_y_file)
 {
+
+    if (!lat_lon_file.is_open() && !x_y_file.is_open()) return {};
+
     std::string line;
     std::getline(lat_lon_file, line);
     std::getline(x_y_file, line);
@@ -146,6 +149,8 @@ std::array<double, 2> Graph<T>::extract_position(std::ifstream& lat_lon_file, st
 template<class T>
 void Graph<T>::extract_edges(std::ifstream& edges_file, GraphViewer* gv)
 {
+    if (!edges_file.is_open()) return;
+
     std::string line;
 
     std::getline(edges_file, line);
@@ -170,6 +175,7 @@ void Graph<T>::extract_edges(std::ifstream& edges_file, GraphViewer* gv)
         double distance = sqrt(pow(source_vertex->info.getX()-dest_vertex->info.getX(), 2)+
                 pow(source_vertex->info.getY()-dest_vertex->info.getY(), 2));
         this->addEdge(source_vertex, dest_vertex, distance);
+        this->addEdge(dest_vertex, source_vertex, distance);
         gv->addEdge(i, source_vertex->info.getID(), dest_vertex->info.getID(), EdgeType::UNDIRECTED);
     }
 }
@@ -177,6 +183,8 @@ void Graph<T>::extract_edges(std::ifstream& edges_file, GraphViewer* gv)
 template<class T>
 void Graph<T>::extract_tags(std::ifstream& tags_file)
 {
+    if (!tags_file.is_open()) return;
+
     std::string line;
 
     std::getline(tags_file, line);
@@ -227,6 +235,7 @@ Graph<T>::Graph(const std::string& city_name, GraphViewer* gv)
     for (Vertex<T>* vertex : vertexSet) {
         int id = vertex->info.getID();
         gv->addNode(id, vertex->info.getX()-pos_arr[0], vertex->info.getY()-pos_arr[1]);
+        gv->setVertexLabel(id, to_string(id));
         gv->setVertexSize(id, 10);
     }
 
@@ -350,8 +359,10 @@ bool Graph<T>::removeVertex(const T& in)
         if ((*it)->info==in) {
             auto v = *it;
             vertexSet.erase(it);
-            for (auto u : vertexSet)
+            for (auto u : vertexSet) {
                 u->removeEdgeTo(v);
+                v->removeEdgeTo(u);
+            }
             delete v;
             return true;
         }
@@ -458,7 +469,7 @@ template<class T>
 void Graph<T>::floydWarshallShortestPath()
 {
     std::cout << "floyd-warshall started\n";
-    unsigned int n = vertexSet.size();
+    unsigned n = vertexSet.size();
     deleteMatrix(W, n);
     deleteMatrix(P, n);
 
