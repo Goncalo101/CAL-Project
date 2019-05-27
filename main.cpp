@@ -146,7 +146,12 @@ int main(int argc, char* argv[])
     // compute all pairs shortest path
     graph.floydWarshallShortestPath();
 
-    vector<Location> path = graph.getFloydWarshallPath(Location(26130636), Location(1241362561));
+    vector<Location> path = graph.getFloydWarshallPath(Location(10), Location(13));
+
+    for (auto vertex : graph.getVertexes()) {
+        for (auto edge : vertex->adj)
+            cout << edge.weight << endl;
+    }
 
     if (!path.empty()) {
         gv->setVertexColor(path[0].getID(), "blue");

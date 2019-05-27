@@ -27,7 +27,7 @@ class Vertex;
 template<class T>
 class Vertex {
     T info;                // contents
-    std::vector<Edge<T>> adj;  // list of outgoing edges
+    // list of outgoing edges
     bool visited;          // auxiliary field used by dfs and bfs
     int indegree;          // auxiliary field used by topsort
     bool processing;       // auxiliary field used by isDAG
@@ -42,18 +42,20 @@ public:
     T* getInfo();
 
     friend class Graph<T>;
+    std::vector<Edge<T>> adj;
 };
 
 template<class T>
 class Edge {
     Vertex<T>* dest;       // destination vertex
-    double weight;         // edge weight
+    // edge weight
 public:
     Edge(Vertex<T>* d, double w);
 
     friend class Graph<T>;
 
     friend class Vertex<T>;
+    double weight;
 };
 
 template<class T>
@@ -67,7 +69,7 @@ class Graph {
 
     //used in Floyd-Warshall
     double** W = nullptr;
-    int** P = nullptr;
+    double** P = nullptr;
     int findVertexIdx(const T& in) const;
 
 public:
@@ -476,11 +478,11 @@ void Graph<T>::floydWarshallShortestPath()
     deleteMatrix(P, n);
 
     W = new double* [n];
-    P = new int* [n];
+    P = new double* [n];
 
     for (unsigned int i = 0; i<n; i++) {
         W[i] = new double[n];
-        P[i] = new int[n];
+        P[i] = new double[n];
 
         for (unsigned int j = 0; j<n; j++) {
             W[i][j] = i==j ? 0 : INF;
@@ -528,10 +530,6 @@ vector<T> Graph<T>::getFloydWarshallPath(const T& origin, const T& destination) 
     vector<T> res;
     int i = findVertexIdx(origin);
     int j = findVertexIdx(destination);
-
-    if (j < i) {
-        std::swap(i, j);
-    }
 
     if (i==-1 || j==-1 || W[i][j]==INF) {
         std::cout << "Path not found\n";

@@ -32,7 +32,7 @@ public:
 
     void setY(int y) { this->y = y; }
 
-    double getID() { return id; }
+    int getID() { return id; }
 
     std::vector<std::string> getTags();
 
