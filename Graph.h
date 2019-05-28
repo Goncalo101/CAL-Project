@@ -28,7 +28,7 @@ class Vertex;
 template<class T>
 class Vertex {
     T info;                // contents
-    std::vector<Edge<T>> adj;  // list of outgoing edges
+    // list of outgoing edges
     bool visited;          // auxiliary field used by dfs and bfs
     int indegree;          // auxiliary field used by topsort
     bool processing;       // auxiliary field used by isDAG
@@ -38,23 +38,25 @@ class Vertex {
     bool removeEdgeTo(Vertex<T>* d);
 
 public:
-    Vertex(T in);
+    explicit Vertex(T in);
 
     T* getInfo();
 
     friend class Graph<T>;
+    std::vector<Edge<T>> adj;
 };
 
 template<class T>
 class Edge {
     Vertex<T>* dest;       // destination vertex
-    double weight;         // edge weight
+    // edge weight
 public:
     Edge(Vertex<T>* d, double w);
 
     friend class Graph<T>;
 
     friend class Vertex<T>;
+    double weight;
 };
 
 template<class T>
@@ -68,13 +70,13 @@ class Graph {
 
     //used in Floyd-Warshall
     double** W = nullptr;
-    int** P = nullptr;
+    double** P = nullptr;
     int findVertexIdx(const T& in) const;
 
 public:
-    Graph(std::string city_name, GraphViewer* gv);
+    Graph(const std::string& city_name, GraphViewer* gv);
 
-    vector<Vertex<T> *> getVertexes() const;
+    vector<Vertex<T>*> getVertexes() const;
 
     int getNumVertex() const;
 
@@ -95,6 +97,7 @@ public:
     ~Graph();
 
     Vertex<T>* findVertex(const int& id) const;
+    void delete_inaccessible();
 };
 
 /****************** Provided constructors and functions ********************/
@@ -102,6 +105,9 @@ public:
 template<class T>
 std::array<double, 2> Graph<T>::extract_position(std::ifstream& lat_lon_file, std::ifstream& x_y_file)
 {
+
+    if (!lat_lon_file.is_open() && !x_y_file.is_open()) return {};
+
     std::string line;
     std::getline(lat_lon_file, line);
     std::getline(x_y_file, line);
@@ -146,6 +152,8 @@ std::array<double, 2> Graph<T>::extract_position(std::ifstream& lat_lon_file, st
 template<class T>
 void Graph<T>::extract_edges(std::ifstream& edges_file, GraphViewer* gv)
 {
+    if (!edges_file.is_open()) return;
+
     std::string line;
 
     std::getline(edges_file, line);
@@ -172,6 +180,7 @@ void Graph<T>::extract_edges(std::ifstream& edges_file, GraphViewer* gv)
 
         this->addEdge(dest_vertex, source_vertex, distance);
         this->addEdge(source_vertex, dest_vertex, distance);
+        this->addEdge(dest_vertex, source_vertex, distance);
         gv->addEdge(i, source_vertex->info.getID(), dest_vertex->info.getID(), EdgeType::UNDIRECTED);
     }
 }
@@ -179,6 +188,8 @@ void Graph<T>::extract_edges(std::ifstream& edges_file, GraphViewer* gv)
 template<class T>
 void Graph<T>::extract_tags(std::ifstream& tags_file)
 {
+    if (!tags_file.is_open()) return;
+
     std::string line;
 
     std::getline(tags_file, line);
@@ -186,7 +197,6 @@ void Graph<T>::extract_tags(std::ifstream& tags_file)
 
     for (int i = 0; i<num_tags; ++i) {
         std::getline(tags_file, line);
-        line.erase(std::remove(line.begin(), line.end(), '='), line.end());
 
         std::string tags_to_add = line;
 
@@ -212,7 +222,7 @@ void Graph<T>::extract_tags(std::ifstream& tags_file)
  * @param city_name
  */
 template<class T>
-Graph<T>::Graph(std::string city_name, GraphViewer* gv)
+Graph<T>::Graph(const std::string& city_name, GraphViewer* gv)
 {
     std::map<std::string, std::ifstream> input_files;
     std::array<std::string, 4> names = {"edges", "lat_lon", "x_y", "tags"};
@@ -230,7 +240,10 @@ Graph<T>::Graph(std::string city_name, GraphViewer* gv)
     for (Vertex<T>* vertex : vertexSet) {
         int id = vertex->info.getID();
         gv->addNode(id, vertex->info.getX()-pos_arr[0], vertex->info.getY()-pos_arr[1]);
+        gv->setVertexLabel(id, to_string(id));
         gv->setVertexSize(id, 10);
+        vertex->info.setX(vertex->info.getX()-pos_arr[0]);
+        vertex->info.setY(vertex->info.getY()-pos_arr[1]);
     }
 
     extract_edges(input_files["edges"], gv);
@@ -240,7 +253,6 @@ Graph<T>::Graph(std::string city_name, GraphViewer* gv)
     extract_tags(input_files["tags"]);
     std::cout << "Graph done" << std::endl;
 }
-
 
 template<class T>
 Vertex<T>::Vertex(T in)
@@ -354,8 +366,10 @@ bool Graph<T>::removeVertex(const T& in)
         if ((*it)->info==in) {
             auto v = *it;
             vertexSet.erase(it);
-            for (auto u : vertexSet)
+            for (auto u : vertexSet) {
                 u->removeEdgeTo(v);
+                v->removeEdgeTo(u);
+            }
             delete v;
             return true;
         }
@@ -368,7 +382,8 @@ bool Graph<T>::removeVertex(const T& in)
  * Follows the algorithm described in theoretical classes.
  */
 template<class T>
-std::vector<T*> Graph<T>::dfs(Vertex<T>* v) const{
+std::vector<T*> Graph<T>::dfs(Vertex<T>* v) const
+{
     std::vector<T*> res;
 
     for (auto vertex : vertexSet)
@@ -407,8 +422,9 @@ Vertex<T>* Graph<T>::findVertex(const T& in) const
     return nullptr;
 }
 
-template <class T>
-vector<Vertex<T>*> Graph<T>::getVertexes() const {
+template<class T>
+vector<Vertex<T>*> Graph<T>::getVertexes() const
+{
     return vertexSet;
 }
 
@@ -443,6 +459,18 @@ void deleteMatrix(T** m, int n)
     }
 }
 
+template <class T>
+void normalizeMatrix(T** mat, unsigned n) {
+
+    for (int i = 0; i  < n ; i++) {
+        for (int j = 0; j < n; j++) {
+            if (j <  i) {
+                mat[j][i] = mat[i][j];
+            }
+        }
+    }
+}
+
 /*
  * Graph destructor
  */
@@ -460,19 +488,19 @@ template<class T>
 void Graph<T>::floydWarshallShortestPath()
 {
     std::cout << "floyd-warshall started\n";
-    unsigned int n = vertexSet.size();
+    unsigned n = vertexSet.size();
     deleteMatrix(W, n);
     deleteMatrix(P, n);
 
     W = new double* [n];
-    P = new int* [n];
+    P = new double* [n];
 
     //omp_lock_t write_lock;
     //omp_init_lock(&write_lock);
 
     for (unsigned int i = 0; i<n; i++) {
         W[i] = new double[n];
-        P[i] = new int[n];
+        P[i] = new double[n];
 
         for (unsigned int j = 0; j<n; j++) {
             W[i][j] = i==j ? 0 : INF;
@@ -496,7 +524,7 @@ void Graph<T>::floydWarshallShortestPath()
 
             for (unsigned int j = 0; j<n; j++) {
 
-                if (W[k][j]==INF) {
+                if (W[i][k]==INF || W[k][j]==INF) {
                     continue;
                 }
 
@@ -513,7 +541,18 @@ void Graph<T>::floydWarshallShortestPath()
 
     //omp_destroy_lock(&write_lock);
 
+    normalizeMatrix(P,n);
+
     std::cout << "floyd-warshall done\n";
+}
+
+template<class T>
+void Graph<T>::delete_inaccessible()
+{
+    for (auto vertex : vertexSet) {
+        if (!vertex->visited)
+            this->removeVertex(vertex->info);
+    }
 }
 
 template<class T>
@@ -524,7 +563,6 @@ vector<T> Graph<T>::getFloydWarshallPath(const T& origin, const T& destination) 
     int j = findVertexIdx(destination);
 
     if (i==-1 || j==-1 || W[i][j]==INF) {
-
         std::cout << "Path not found\n";
         return res;
     }
@@ -538,6 +576,8 @@ vector<T> Graph<T>::getFloydWarshallPath(const T& origin, const T& destination) 
 
     return res;
 }
+
+
 
 #endif //CAL_PROJECT_GRAPH_H
 

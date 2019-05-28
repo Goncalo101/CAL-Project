@@ -6,11 +6,14 @@
 class Item {
 private:
     int weight;
-    Location location;
+    int location_id;
+    std::string destinatario;
+    int value;
+    int numFatura;
 public:
-    Item(int weight, Location& location);
+    Item(int weight, int id,std::string destinatario,int value,int numFatura);
     int getWeight();
-    Location* getLocation();
+    int getLocation();
 };
 
 #endif //CAL_PROJECT_ITEM_H

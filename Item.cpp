@@ -1,14 +1,14 @@
 #include "Item.h"
 
-Item::Item(int weight, Location& location)
-        :weight(weight), location(location) { }
+Item::Item(int weight, int id,std::string dest, int value, int numFatura)
+        :weight(weight), location_id(id), destinatario(dest), value(value), numFatura(numFatura) { }
 
 int Item::getWeight()
 {
     return weight;
 }
 
-Location* Item::getLocation()
+int Item::getLocation()
 {
-    return &location;
+    return location_id;
 }
