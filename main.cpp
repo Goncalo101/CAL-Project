@@ -13,33 +13,6 @@ static vector<int> usedLocationIds;
 
 void compute_path(Graph<Location>& graph, const vector<DeliveryPoint*>& deliveries, vector<Location>& path,
         vector<DeliveryPoint*>& delivery_queue);
-void deleteUnusedVertexes(Graph<Location>& graph)
-{
-    vector<Vertex<Location>*> locations = graph.getVertexes();
-
-    for (Vertex<Location>* vertex : locations) {
-        if (vertex->getInfo()->getType()==UNUSED) {
-            graph.removeVertex(*vertex->getInfo());
-        }
-    }
-}
-
-vector<Location*> getPossibleFinalLocations(vector<Location*>& accessible_locations)
-{
-    vector<Location*> finals;
-
-    for (Location* location : accessible_locations) {
-        for (string tag : location->getTags()) {
-            if (tag.find("building=warehouse")!=string::npos || tag.find("industrial=warehouse")!=string::npos ||
-                    tag.find("landuse=industrial")!=string::npos || tag.find("amenity=loading_dock")!=string::npos) {
-                finals.push_back(location);
-                break;
-            }
-        }
-    }
-
-    return finals;
-}
 
 vector<DeliveryPoint*> associateItems(vector<Item*>& items, vector<Location*>& accessible_locations)
 {
@@ -74,23 +47,6 @@ vector<DeliveryPoint*> associateItems(vector<Item*>& items, vector<Location*>& a
     }
 
     return deliveries;
-}
-
-vector<Location*> getPossibleInitialLocations(Graph<Location>& graph)
-{
-    vector<Location*> initials;
-
-    for (Vertex<Location>* vertex : graph.getVertexes()) {
-        for (string tag : vertex->getInfo()->getTags()) {
-            if (tag.find("building=warehouse")!=string::npos || tag.find("industrial=warehouse")!=string::npos ||
-                    tag.find("landuse=industrial")!=string::npos || tag.find("amenity=loading_dock")!=string::npos) {
-                initials.push_back(vertex->getInfo());
-                break;
-            }
-        }
-    }
-
-    return initials;
 }
 
 GraphViewer* init_viewer(int width, int height)
@@ -149,7 +105,7 @@ void freeItems(std::vector<Item*> vec) {
 void compute_path(Graph<Location>& graph, const vector<DeliveryPoint*>& deliveries, vector<Location>& path,
         vector<DeliveryPoint*>& delivery_queue)
 {
-    for (int i = 0; i<deliveries.size(); ++i) {
+    for (int i = 0; !delivery_queue.empty(); ++i) {
         vector<Location> temp;
         Location origin_location = deliveries[i]->getLocation();
 
@@ -186,10 +142,13 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+
     // sanitize input
     string city_name(argv[1]);
     transform(city_name.begin(), city_name.end(), city_name.begin(), ::toupper);
     transform(city_name.begin()+1, city_name.end(), city_name.begin()+1, ::tolower);
+
+    srand(time(nullptr));
 
     // load graphviewer
     GraphViewer* gv = init_viewer(700, 600);
@@ -197,18 +156,15 @@ int main(int argc, char* argv[])
     // load graph
     Graph<Location> graph(city_name, gv);
 
-    // compute valid locations for the initial point and pick one
-    vector<Location*> initial_points = getPossibleInitialLocations(graph);
-    Vertex<Location>* initial_vertex = graph.findVertex(initial_points[0]->getID());
-    InitialPoint* initial = new InitialPoint(*initial_points[0]);
+    // pick an initial point
+    Vertex<Location> initial_vertex = *graph.getVertexes()[rand() % graph.getVertexes().size()];
+
+    // pick a final point
+    Vertex<Location> final_point = *graph.getVertexes()[rand() % graph.getVertexes().size()];
 
     // perform dfs starting in the initial vertex chosen earlier and delete vertices that are inaccessible from those
-    vector<Location*> accessible_locations = graph.dfs(initial_vertex);
+    vector<Location*> accessible_locations = graph.dfs(&initial_vertex);
     graph.delete_inaccessible();
-
-    // compute valid locations for the final points and pick one
-    vector<Location*> final_points = getPossibleFinalLocations(accessible_locations);
-//    FinalPoint* final = new FinalPoint(*final_points[1]);
 
     // TODO: get items from file or generate random items
     vector<Item*> items = itemFactory(5,graph.getVertexes());
@@ -218,7 +174,7 @@ int main(int argc, char* argv[])
     vector<Location> path;
     vector<DeliveryPoint*> delivery_queue(deliveries);
 
-    graph.dijkstraShortestPath(initial->getLocation());
+    graph.dijkstraShortestPath(*initial_vertex.getInfo());
 
     Vertex<Location>* min_vertex = graph.getVertexes()[0];
     int min_idx = 0;
@@ -235,22 +191,11 @@ int main(int argc, char* argv[])
 
     delivery_queue.erase(delivery_queue.begin()+min_idx);
 
-    vector<Location> path = graph.getFloydWarshallPath(Location(423840626), Location(423840615));
-    path = graph.getPath(initial->getLocation(), *min_vertex->getInfo());
+    path = graph.getPath(*initial_vertex.getInfo(), *min_vertex->getInfo());
 
-    /*
-    for (auto vertex : graph.getVertexes()) {
-        for (auto edge : vertex->adj)
-            cout << edge.weight << endl;
     compute_path(graph, deliveries, path, delivery_queue);
 
     cout << "------------------\n";
-    for (Location location : path) {
-        cout << location.getID() << endl;
-    }
-     */
-
-    cout << "First try\n";
     for (int l = 0; l < path.size(); l++) {
         std::cout << path[l].getID() << endl;
     }
