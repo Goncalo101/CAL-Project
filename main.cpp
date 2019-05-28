@@ -11,44 +11,6 @@
 
 static vector<int> usedLocationIds;
 
-void compute_path(Graph<Location>& graph, const vector<DeliveryPoint*>& deliveries, vector<Location>& path,
-        vector<DeliveryPoint*>& delivery_queue);
-
-vector<DeliveryPoint*> associateItems(vector<Item*>& items, vector<Location*>& accessible_locations)
-{
-    vector<DeliveryPoint*> deliveries;
-
-    for (Item* item : items) {
-        for (Location* location : accessible_locations) {
-            if (item->getLocation()==location->getID()) {
-                switch (location->getType()) {
-                case UNUSED: {
-                    DeliveryPoint* point = new DeliveryPoint(*location);
-
-                    deliveries.push_back(point);
-
-                    point->addItem(item);
-
-                    location->set_type(point->getType());
-                    break;
-                }
-                case DELIVER: {
-                    for (DeliveryPoint* point : deliveries) {
-                        if (point->getLocation().getID()==location->getID()) {
-                            point->addItem(item);
-                        }
-                    }
-                    break;
-                }
-                default:break;
-                }
-            }
-        }
-    }
-
-    return deliveries;
-}
-
 GraphViewer* init_viewer(int width, int height)
 {
     auto gv = new GraphViewer(width, height, false);
@@ -140,34 +102,30 @@ void compute_path(Graph<Location>& graph, const vector<DeliveryPoint*>& deliveri
         origin_location = path_temp.back();
         path_temp.clear();
     }
-    /*for (int i = 0; !delivery_queue.empty(); ++i) {
-        vector<Location> temp;
-        Location origin_location = deliveries[i]->getLocation();
+}
 
-        graph.dijkstraShortestPath(origin_location);
+vector<Vertex<Location>> get_garages(const Graph<Location>& graph)
+{
+    vector<Vertex<Location>> garages;
 
-        Vertex<Location>* min_vertex = graph.getVertexes()[0];
-        int min_idx = 0;
-        for (int j = 0; j<delivery_queue.size(); ++j) {
-            if (i==j) continue;
+    for (int i = 0; i < 10; ++i) {
+        int index = rand() % graph.getVertexes().size();
+        bool id_used = false;
 
-            Vertex<Location>* vertex = graph.findVertex(delivery_queue[j]->getLocation().getID());
-
-            if (vertex==nullptr) continue;
-
-            if (vertex->getDist()<min_vertex->getDist()) {
-                min_vertex = vertex;
-                min_idx = j;
+        for (int location_id : usedLocationIds) {
+            if (location_id == index) {
+                id_used = true;
             }
         }
 
-        delivery_queue.erase(delivery_queue.begin()+min_idx);
+        if (id_used) {
+            --i;
+        } else {
+            garages.push_back(*graph.getVertexes()[rand() % graph.getVertexes().size()]);
+        }
+    }
 
-        Location destination_location = *min_vertex->getInfo();
-
-        temp = graph.getPath(origin_location, destination_location);
-        path.insert(path.end(), temp.begin(), temp.end());
-    }*/
+    return garages;
 }
 
 int main(int argc, char* argv[])
@@ -176,7 +134,6 @@ int main(int argc, char* argv[])
         cout << "Usage: " << argv[0] << " <city name>" << endl;
         exit(1);
     }
-
 
     // sanitize input
     string city_name(argv[1]);
@@ -200,6 +157,7 @@ int main(int argc, char* argv[])
 
     // pick a final point
     Vertex<Location> final_point = *graph.getVertexes()[rand()%graph.getVertexes().size()];
+    vector<Vertex<Location>> garages = get_garages(graph);
 
     // generate random items
     vector<Item*> items = itemFactory(5, accessible_locations);
@@ -234,6 +192,18 @@ int main(int argc, char* argv[])
         path = graph.getPath(*initial_vertex.getInfo(), *min_vertex->getInfo());
 
         compute_path(graph, deliveries, path, delivery_queue);
+
+        graph.dijkstraShortestPath(path.back());
+
+        min_vertex = graph.findVertex(garages[0].getInfo()->getID());
+        for (Vertex<Location> vertex : garages) {
+            if (vertex.getDist() < min_vertex->getDist()) {
+                min_vertex = &vertex;
+            }
+        }
+
+        vector<Location> path_temp = graph.getPath(path.back(), *min_vertex->getInfo());
+        path.insert(path.end(), path_temp.begin(), path_temp.end());
     }
 
     cout << "------------------\n";
@@ -253,8 +223,12 @@ int main(int argc, char* argv[])
             gv->setVertexColor(delivery_point->getLocation().getID(), "black");
             gv->setVertexSize(delivery_point->getLocation().getID(), 20);
         }
-        gv->setVertexColor(path.back().getID(), "red");
         gv->setVertexSize(path.back().getID(), 20);
+
+        for (Vertex<Location> vertex : garages) {
+            gv->setVertexColor(vertex.getInfo()->getID(), "pink");
+        }
+
     }
 
     freeItems(items);
