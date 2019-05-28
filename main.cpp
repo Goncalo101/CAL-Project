@@ -59,9 +59,10 @@ GraphViewer* init_viewer(int width, int height)
 }
 
 //return true if an id has been used
-bool checkUsedId(int id) {
-    for (int i = 0; i < usedLocationIds.size(); i++) {
-        if (id == usedLocationIds[i]) {
+bool checkUsedId(int id)
+{
+    for (int i = 0; i<usedLocationIds.size(); i++) {
+        if (id==usedLocationIds[i]) {
             return true;
         }
     }
@@ -82,7 +83,6 @@ std::vector<Item*> itemFactory(int numItems, vector<Vertex<Location>*> vertexSet
 
         int locationIndex = rand()%vertexSet.size();
         int locationID = vertexSet[locationIndex]->getInfo()->getID();
-
 
         if (checkUsedId(locationID)) {
             continue;
@@ -172,11 +172,14 @@ int main(int argc, char* argv[])
     // pick a final point
     Vertex<Location> final_point = *graph.getVertexes()[rand()%graph.getVertexes().size()];
 
-
     // generate random items
     vector<Item*> items = itemFactory(5, graph.getVertexes());
 
-    vector<DeliveryPoint*> deliveries = associateItems(items, accessible_locations);
+    vector<DeliveryPoint*> deliveries;
+
+    for (Item* item : items) {
+        deliveries.push_back(new DeliveryPoint(Location(item->getLocation())));
+    }
 
     vector<Location> path;
     vector<DeliveryPoint*> delivery_queue(deliveries);
@@ -196,26 +199,34 @@ int main(int argc, char* argv[])
         }
     }
 
-    delivery_queue.erase(delivery_queue.begin()+min_idx);
+    if (!delivery_queue.empty()) {
+        delivery_queue.erase(delivery_queue.begin()+min_idx);
 
-    path = graph.getPath(*initial_vertex.getInfo(), *min_vertex->getInfo());
+        path = graph.getPath(*initial_vertex.getInfo(), *min_vertex->getInfo());
 
-    compute_path(graph, deliveries, path, delivery_queue);
+        compute_path(graph, deliveries, path, delivery_queue);
+    }
 
     cout << "------------------\n";
-    for (Location &l : path) {
+    for (Location& l : path) {
         std::cout << l.getID() << endl;
     }
     cout << "------------------\n";
 
     if (!path.empty()) {
         gv->setVertexColor(path[0].getID(), "blue");
+        gv->setVertexSize(path[0].getID(), 20);
         for (int i = 1; i<path.size(); i++) {
             gv->setVertexColor(path[i].getID(), "green");
+            gv->setVertexSize(path[i].getID(), 20);
         }
-        gv->setVertexColor(path[path.size()-1].getID(), "red");
+        for (DeliveryPoint* delivery_point : deliveries) {
+            gv->setVertexColor(delivery_point->getLocation().getID(), "black");
+            gv->setVertexSize(delivery_point->getLocation().getID(), 20);
+        }
+        gv->setVertexColor(path.back().getID(), "red");
+        gv->setVertexSize(path.back().getID(), 20);
     }
-
 
     freeItems(items);
 
