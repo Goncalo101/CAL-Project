@@ -44,6 +44,8 @@ class Vertex {
 public:
     explicit Vertex(T in);
 
+    void setDist(double dist) {this->dist = dist;}
+
     bool operator<(Vertex<T>& vertex); // // required by MutablePriorityQueue
 
     T* getInfo();
@@ -79,11 +81,11 @@ class Graph {
     //used in Floyd-Warshall
     double** W = nullptr;
     double** P = nullptr;
-    int findVertexIdx(const T& in) const;
 
 public:
     Graph(const std::string& city_name, GraphViewer* gv);
 
+    int findVertexIdx(const T& in) const;
     vector<Vertex<T>*> getVertexes() const;
 
     int getNumVertex() const;
@@ -95,8 +97,6 @@ public:
     bool addEdge(Vertex<T>* v1, Vertex<T>* v2, double w);
 
     bool removeEdge(const T& sourc, const T& dest);
-
-    std::vector<T*> dfs(Vertex<T>* v) const;
 
     void floydWarshallShortestPath();
 
@@ -110,6 +110,12 @@ public:
     void dijkstraShortestPath(const T& origin);
     bool relax(Vertex<T>* u, Vertex<T>* v, double w);
     Vertex<T>* initSingleSource(const T& origin);
+
+    void delete_inaccessible(GraphViewer *graphViewer);
+
+    void dfsVisit(Vertex<T> *v, vector<T> &res) const;
+
+    vector<T> dfs(Vertex<T>* vert) const;
 };
 
 /****************** Provided constructors and functions ********************/
@@ -396,6 +402,7 @@ bool Graph<T>::removeVertex(const T& in)
  * Returns a vector with the contents of the vertices by dfs order.
  * Follows the algorithm described in theoretical classes.
  */
+/*
 template<class T>
 std::vector<T*> Graph<T>::dfs(Vertex<T>* v) const
 {
@@ -408,11 +415,39 @@ std::vector<T*> Graph<T>::dfs(Vertex<T>* v) const
         dfsVisit(v, res);
     return res;
 }
+ */
+
+template <class T>
+vector<T> Graph<T>::dfs(Vertex<T>* vert) const {
+    vector<T> res;
+    for (auto v : vertexSet)
+        v->visited = false;
+
+    dfsVisit(vert, res);
+
+    return res;
+}
+
+/*
+ * Auxiliary function that visits a vertex (v) and its adjacent, recursively.
+ * Updates a parameter with the list of visited node contents.
+ */
+template <class T>
+void Graph<T>::dfsVisit(Vertex<T> *v, vector<T> & res) const {
+    v->visited = true;
+    res.push_back(v->info);
+    for (auto & e : v->adj) {
+        auto w = e.dest;
+        if ( ! w->visited)
+            dfsVisit(w, res);
+    }
+}
 
 /*
  * Auxiliary function that visits a vertex (v) and its adjacent not yet visited, recursively.
  * Updates a parameter with the list of visited node contents.
  */
+/*
 template<class T>
 void Graph<T>::dfsVisit(Vertex<T>* v, std::vector<T*>& res) const
 {
@@ -424,10 +459,12 @@ void Graph<T>::dfsVisit(Vertex<T>* v, std::vector<T*>& res) const
             dfsVisit(w, res);
     }
 }
+ */
 
 /*
  * Auxiliary function to find a vertex with a given content.
  */
+
 template<class T>
 Vertex<T>* Graph<T>::findVertex(const T& in) const
 {
@@ -539,10 +576,17 @@ void Graph<T>::floydWarshallShortestPath()
 template<class T>
 void Graph<T>::delete_inaccessible()
 {
+    std::cout << "loooool: " << getNumVertex() << std::endl;
+    int i = 0;
     for (auto vertex : vertexSet) {
-        if (!vertex->visited)
+        if (!vertex->visited) {
             this->removeVertex(vertex->info);
+            i++;
+        }
     }
+
+    std::cout << "PUTA QUE PARIUS: " << i << std::endl;
+    std::cout << "sahsjahsj : " << getNumVertex() << std::endl;
 }
 
 template<class T>

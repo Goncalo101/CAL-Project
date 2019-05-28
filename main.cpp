@@ -70,7 +70,7 @@ bool checkUsedId(int id)
     return false;
 }
 
-std::vector<Item*> itemFactory(int numItems, vector<Vertex<Location>*> vertexSet)
+std::vector<Item*> itemFactory(int numItems, vector<Location> vertexSet)
 {
     vector<Item*> res;
 
@@ -82,7 +82,7 @@ std::vector<Item*> itemFactory(int numItems, vector<Vertex<Location>*> vertexSet
     for (int i = 0; i<numItems; i++) {
 
         int locationIndex = rand()%vertexSet.size();
-        int locationID = vertexSet[locationIndex]->getInfo()->getID();
+        int locationID = vertexSet[locationIndex].getID();
 
         if (checkUsedId(locationID)) {
             continue;
@@ -111,7 +111,36 @@ void freeItems(std::vector<Item*> vec)
 void compute_path(Graph<Location>& graph, const vector<DeliveryPoint*>& deliveries, vector<Location>& path,
         vector<DeliveryPoint*>& delivery_queue)
 {
-    for (int i = 0; !delivery_queue.empty(); ++i) {
+    Location origin_location = path.back();
+    vector<Location> path_temp;
+
+    while (!delivery_queue.empty())  {
+        graph.dijkstraShortestPath(origin_location);
+
+        Vertex<Location>* min_vertex = new Vertex<Location>(Location(0));
+        min_vertex->setDist(INF);
+        int min_idx = 0;
+        for (int j = 0; j < delivery_queue.size(); ++j) {
+            if (delivery_queue[j]->getLocation() == origin_location) continue;
+
+            Vertex<Location>* vertex = graph.findVertex(delivery_queue[j]->getLocation().getID());
+
+            if (vertex == nullptr) continue;
+
+            if (vertex->getDist() < min_vertex->getDist()) {
+                min_vertex = vertex;
+                min_idx = j;
+            }
+        }
+
+        delivery_queue.erase(delivery_queue.begin() + min_idx);
+        path_temp = graph.getPath(origin_location, *min_vertex->getInfo());
+        path.insert(path.end(), path_temp.begin(), path_temp.end());
+
+        origin_location = path_temp.back();
+        path_temp.clear();
+    }
+    /*for (int i = 0; !delivery_queue.empty(); ++i) {
         vector<Location> temp;
         Location origin_location = deliveries[i]->getLocation();
 
@@ -138,7 +167,7 @@ void compute_path(Graph<Location>& graph, const vector<DeliveryPoint*>& deliveri
 
         temp = graph.getPath(origin_location, destination_location);
         path.insert(path.end(), temp.begin(), temp.end());
-    }
+    }*/
 }
 
 int main(int argc, char* argv[])
@@ -166,14 +195,14 @@ int main(int argc, char* argv[])
     Vertex<Location> initial_vertex = *graph.getVertexes()[rand()%graph.getVertexes().size()];
 
     // perform dfs starting in the initial vertex chosen earlier and delete vertices that are inaccessible from those
-    vector<Location*> accessible_locations = graph.dfs(&initial_vertex);
+    vector<Location> accessible_locations = graph.dfs(&initial_vertex);
     graph.delete_inaccessible();
 
     // pick a final point
     Vertex<Location> final_point = *graph.getVertexes()[rand()%graph.getVertexes().size()];
 
     // generate random items
-    vector<Item*> items = itemFactory(5, graph.getVertexes());
+    vector<Item*> items = itemFactory(5, accessible_locations);
 
     vector<DeliveryPoint*> deliveries;
 
