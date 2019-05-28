@@ -47,6 +47,7 @@ public:
     bool operator<(Vertex<T>& vertex); // // required by MutablePriorityQueue
 
     T* getInfo();
+    double getDist() { return this->dist; }
 
     friend class Graph<T>;
     std::vector<Edge<T>> adj;

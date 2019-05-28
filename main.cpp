@@ -4,6 +4,8 @@
 #include "Item.h"
 #include "InterestPoint.h"
 
+void compute_path(Graph<Location>& graph, const vector<DeliveryPoint*>& deliveries, vector<Location>& path,
+        vector<DeliveryPoint*>& delivery_queue);
 void deleteUnusedVertexes(Graph<Location>& graph)
 {
     vector<Vertex<Location>*> locations = graph.getVertexes();
@@ -107,6 +109,39 @@ GraphViewer* init_viewer(int width, int height)
     return gv;
 }
 
+void compute_path(Graph<Location>& graph, const vector<DeliveryPoint*>& deliveries, vector<Location>& path,
+        vector<DeliveryPoint*>& delivery_queue)
+{
+    for (int i = 0; i<deliveries.size(); ++i) {
+        vector<Location> temp;
+        Location origin_location = deliveries[i]->getLocation();
+
+        graph.dijkstraShortestPath(origin_location);
+
+        Vertex<Location>* min_vertex = graph.getVertexes()[0];
+        int min_idx = 0;
+        for (int j = 0; j<delivery_queue.size(); ++j) {
+            if (i==j) continue;
+
+            Vertex<Location>* vertex = graph.findVertex(delivery_queue[j]->getLocation().getID());
+
+            if (vertex==nullptr) continue;
+
+            if (vertex->getDist()<min_vertex->getDist()) {
+                min_vertex = vertex;
+                min_idx = j;
+            }
+        }
+
+        delivery_queue.erase(delivery_queue.begin()+min_idx);
+
+        Location destination_location = *min_vertex->getInfo();
+
+        temp = graph.getPath(origin_location, destination_location);
+        path.insert(path.end(), temp.begin(), temp.end());
+    }
+}
+
 int main(int argc, char* argv[])
 {
     if (argc!=2) {
@@ -143,23 +178,35 @@ int main(int argc, char* argv[])
 
     vector<DeliveryPoint*> deliveries = associateItems(items, accessible_locations);
 
-    // compute all pairs shortest path
-//    graph.floydWarshallShortestPath();
+    vector<Location> path;
+    vector<DeliveryPoint*> delivery_queue(deliveries);
 
-    graph.dijkstraShortestPath(Location(1252224456));
+    graph.dijkstraShortestPath(initial->getLocation());
 
-    vector<Location> path = graph.getPath(Location(1252224456), Location(1229010152));
+    Vertex<Location>* min_vertex = graph.getVertexes()[0];
+    int min_idx = 0;
+    for (int j = 0; j<delivery_queue.size(); ++j) {
+        Vertex<Location>* vertex = graph.findVertex(delivery_queue[j]->getLocation().getID());
+
+        if (vertex==nullptr) continue;
+
+        if (vertex->getDist()<min_vertex->getDist()) {
+            min_vertex = vertex;
+            min_idx = j;
+        }
+    }
+
+    delivery_queue.erase(delivery_queue.begin()+min_idx);
+
+    path = graph.getPath(initial->getLocation(), *min_vertex->getInfo());
+
+    compute_path(graph, deliveries, path, delivery_queue);
 
     cout << "------------------\n";
     for (Location location : path) {
         cout << location.getID() << endl;
     }
     cout << "------------------\n";
-
-    for (auto vertex : graph.getVertexes()) {
-        for (auto edge : vertex->adj)
-            cout << edge.weight << endl;
-    }
 
     if (!path.empty()) {
         gv->setVertexColor(path[0].getID(), "blue");
