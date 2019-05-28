@@ -11,6 +11,8 @@
 
 static vector<int> usedLocationIds;
 
+void compute_path(Graph<Location>& graph, const vector<DeliveryPoint*>& deliveries, vector<Location>& path,
+        vector<DeliveryPoint*>& delivery_queue);
 void deleteUnusedVertexes(Graph<Location>& graph)
 {
     vector<Vertex<Location>*> locations = graph.getVertexes();
@@ -128,6 +130,39 @@ void freeItems(std::vector<Item*> vec) {
     }
 }
 
+void compute_path(Graph<Location>& graph, const vector<DeliveryPoint*>& deliveries, vector<Location>& path,
+        vector<DeliveryPoint*>& delivery_queue)
+{
+    for (int i = 0; i<deliveries.size(); ++i) {
+        vector<Location> temp;
+        Location origin_location = deliveries[i]->getLocation();
+
+        graph.dijkstraShortestPath(origin_location);
+
+        Vertex<Location>* min_vertex = graph.getVertexes()[0];
+        int min_idx = 0;
+        for (int j = 0; j<delivery_queue.size(); ++j) {
+            if (i==j) continue;
+
+            Vertex<Location>* vertex = graph.findVertex(delivery_queue[j]->getLocation().getID());
+
+            if (vertex==nullptr) continue;
+
+            if (vertex->getDist()<min_vertex->getDist()) {
+                min_vertex = vertex;
+                min_idx = j;
+            }
+        }
+
+        delivery_queue.erase(delivery_queue.begin()+min_idx);
+
+        Location destination_location = *min_vertex->getInfo();
+
+        temp = graph.getPath(origin_location, destination_location);
+        path.insert(path.end(), temp.begin(), temp.end());
+    }
+}
+
 int main(int argc, char* argv[])
 {
     if (argc!=2) {
@@ -157,22 +192,45 @@ int main(int argc, char* argv[])
 
     // compute valid locations for the final points and pick one
     vector<Location*> final_points = getPossibleFinalLocations(accessible_locations);
-    //FinalPoint* final = new FinalPoint(*final_points[1]);
+//    FinalPoint* final = new FinalPoint(*final_points[1]);
 
     // TODO: get items from file or generate random items
     vector<Item*> items = itemFactory(5,graph.getVertexes());
 
     vector<DeliveryPoint*> deliveries = associateItems(items, accessible_locations);
 
-    // compute all pairs shortest path
-    graph.floydWarshallShortestPath();
+    vector<Location> path;
+    vector<DeliveryPoint*> delivery_queue(deliveries);
+
+    graph.dijkstraShortestPath(initial->getLocation());
+
+    Vertex<Location>* min_vertex = graph.getVertexes()[0];
+    int min_idx = 0;
+    for (int j = 0; j<delivery_queue.size(); ++j) {
+        Vertex<Location>* vertex = graph.findVertex(delivery_queue[j]->getLocation().getID());
+
+        if (vertex==nullptr) continue;
+
+        if (vertex->getDist()<min_vertex->getDist()) {
+            min_vertex = vertex;
+            min_idx = j;
+        }
+    }
+
+    delivery_queue.erase(delivery_queue.begin()+min_idx);
 
     vector<Location> path = graph.getFloydWarshallPath(Location(423840626), Location(423840615));
+    path = graph.getPath(initial->getLocation(), *min_vertex->getInfo());
 
     /*
     for (auto vertex : graph.getVertexes()) {
         for (auto edge : vertex->adj)
             cout << edge.weight << endl;
+    compute_path(graph, deliveries, path, delivery_queue);
+
+    cout << "------------------\n";
+    for (Location location : path) {
+        cout << location.getID() << endl;
     }
      */
 
@@ -180,6 +238,7 @@ int main(int argc, char* argv[])
     for (int l = 0; l < path.size(); l++) {
         std::cout << path[l].getID() << endl;
     }
+    cout << "------------------\n";
 
     if (!path.empty()) {
         gv->setVertexColor(path[0].getID(), "blue");

@@ -10,4 +10,5 @@ add_executable(CAL-Project main.cpp
         Location.cpp Location.h
         InterestPoint.cpp InterestPoint.h Item.h Item.cpp
         graphviewer/connection.cpp graphviewer/connection.h graphviewer/edgetype.h graphviewer/graphviewer.cpp graphviewer/graphviewer.h
+        MutablePriorityQueue.h
         )
