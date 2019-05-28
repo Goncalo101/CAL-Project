@@ -173,8 +173,9 @@ int main(int argc, char* argv[])
     }
 
     //initialize truck array
-    Truck* trucks[MAX_TRUCKS];
-    for (int i = 0; i < MAX_TRUCKS; i++) {
+    int truckNum = rand() % MAX_TRUCKS + 1;
+    Truck* trucks[truckNum];
+    for (int i = 0; i < truckNum; i++) {
         Truck* truck = new Truck((rand() % (MAX_TRUCK_CAPACITY - MIN_TRUCK_CAPACITY)) + MAX_TRUCK_CAPACITY);
         trucks[i] = truck;
     }
