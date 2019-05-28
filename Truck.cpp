@@ -4,7 +4,10 @@
 
 #include "Truck.h"
 
-Truck::Truck(int id, double capacity) : id(id), capacity(capacity){}
+Truck::Truck(double capacity) : id(id), capacity(capacity){
+    static int tempId = 0;
+    this->id = tempId += 1;
+}
 
 int Truck::getID() {
     return id;
@@ -16,6 +19,7 @@ double Truck::getCapacity() {
 
 void Truck::addItem(Item *item) {
     items.push_back(item);
+    this->current_weight += item->getWeight();
 }
 
 std::vector<Item *> Truck::getItems() {
@@ -28,6 +32,10 @@ void Truck::addPath(std::vector<Location> &path) {
 
 std::vector<Location> Truck::getPath() {
     return path;
+}
+
+void Truck::addPathLoc(Location &location) {
+    this->path.push_back(location);
 }
 
 

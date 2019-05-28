@@ -4,10 +4,14 @@
 #include "Location.h"
 #include "Item.h"
 #include "InterestPoint.h"
+#include "Truck.h"
 
 #define MAX_WEIGHT 50
 #define MAX_VALUE  500
 #define MAX_FATURA 1000000
+#define MAX_TRUCK_CAPACITY 500
+#define MIN_TRUCK_CAPACITY 100
+#define MAX_TRUCKS 3
 
 static vector<int> usedLocationIds;
 
@@ -208,6 +212,13 @@ int main(int argc, char* argv[])
 
     for (Item* item : items) {
         deliveries.push_back(new DeliveryPoint(Location(item->getLocation())));
+    }
+
+    //initialize truck array
+    Truck* trucks[MAX_TRUCKS];
+    for (int i = 0; i < MAX_TRUCKS; i++) {
+        Truck* truck = new Truck((rand() % (MAX_TRUCK_CAPACITY - MIN_TRUCK_CAPACITY)) + MAX_TRUCK_CAPACITY);
+        trucks[i] = truck;
     }
 
     vector<Location> path;
