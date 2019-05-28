@@ -102,6 +102,17 @@ GraphViewer* init_viewer(int width, int height)
     return gv;
 }
 
+//return true if an id has been used
+bool checkUsedId(int id) {
+    for (int i = 0; i < usedLocationIds.size(); i++) {
+        if (id == usedLocationIds[i]) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 std::vector<Item*> itemFactory(int numItems,vector<Vertex<Location>*> vertexSet)  {
     vector<Item*> res;
     srand(time(NULL));
@@ -113,6 +124,11 @@ std::vector<Item*> itemFactory(int numItems,vector<Vertex<Location>*> vertexSet)
 
         int locationIndex = rand() % vertexSet.size();
         int locationID = vertexSet[locationIndex]->getInfo()->getID();
+
+        if (checkUsedId(locationID)) {
+            continue;
+        }
+
         usedLocationIds.push_back(locationID);
         int weight = rand() % MAX_WEIGHT + 1;
         string dest = dest_first_name[rand() % dest_first_name.size()] + " " + dest_first_name[rand() % dest_first_name.size()] + " " + dest_last_name[rand() % dest_last_name.size()];
