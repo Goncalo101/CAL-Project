@@ -144,9 +144,17 @@ int main(int argc, char* argv[])
     vector<DeliveryPoint*> deliveries = associateItems(items, accessible_locations);
 
     // compute all pairs shortest path
-    graph.floydWarshallShortestPath();
+//    graph.floydWarshallShortestPath();
 
-    vector<Location> path = graph.getFloydWarshallPath(Location(10), Location(13));
+    graph.dijkstraShortestPath(Location(1252224456));
+
+    vector<Location> path = graph.getPath(Location(1252224456), Location(1229010152));
+
+    cout << "------------------\n";
+    for (Location location : path) {
+        cout << location.getID() << endl;
+    }
+    cout << "------------------\n";
 
     for (auto vertex : graph.getVertexes()) {
         for (auto edge : vertex->adj)

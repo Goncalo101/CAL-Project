@@ -1,3 +1,4 @@
+#include <cmath>
 #include "Location.h"
 
 Location::Location(int x, int y, int lat, int lon, int id)
@@ -43,5 +44,10 @@ TYPE Location::getType()
 std::vector<std::string> Location::getTags()
 {
     return tags;
+}
+
+bool Location::operator<(const Location &l1)
+{
+    return sqrt(pow(this->x, 2) + pow(this->y, 2)) < sqrt(pow(l1.x, 2) + pow(l1.y, 2)) ;
 }
 

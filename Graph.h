@@ -10,8 +10,9 @@
 #include <iostream>
 #include <cmath>
 #include "graphviewer/graphviewer.h"
+#include "MutablePriorityQueue.h"
 
-#define INF std::numeric_limits<double>::max()
+#define INF 10000000
 
 template<class T>
 class Edge;
@@ -32,6 +33,10 @@ class Vertex {
     int indegree;          // auxiliary field used by topsort
     bool processing;       // auxiliary field used by isDAG
 
+    double dist = 0;
+    Vertex<T>* path = NULL;
+    int queueIndex = 0;        // required by MutablePriorityQueue
+
     void addEdge(Vertex<T>* dest, double w);
 
     bool removeEdgeTo(Vertex<T>* d);
@@ -39,10 +44,13 @@ class Vertex {
 public:
     explicit Vertex(T in);
 
+    bool operator<(Vertex<T>& vertex); // // required by MutablePriorityQueue
+
     T* getInfo();
 
     friend class Graph<T>;
     std::vector<Edge<T>> adj;
+    friend class MutablePriorityQueue<Vertex<T>>;
 };
 
 template<class T>
@@ -97,6 +105,10 @@ public:
 
     Vertex<T>* findVertex(const int& id) const;
     void delete_inaccessible();
+    vector<T> getPath(const T& origin, const T& dest) const;
+    void dijkstraShortestPath(const T& origin);
+    bool relax(Vertex<T>* u, Vertex<T>* v, double w);
+    Vertex<T>* initSingleSource(const T& origin);
 };
 
 /****************** Provided constructors and functions ********************/
@@ -350,6 +362,11 @@ T* Vertex<T>::getInfo()
 {
     return &info;
 }
+template<class T>
+bool Vertex<T>::operator<(Vertex<T>& vertex)
+{
+    return getInfo()<vertex.getInfo();
+}
 
 /*
  *  Removes a vertex with a given content (in) from a graph (this), and
@@ -483,10 +500,13 @@ void Graph<T>::floydWarshallShortestPath()
     for (unsigned int i = 0; i<n; i++) {
         W[i] = new double[n];
         P[i] = new double[n];
+    }
 
+    for (unsigned int i = 0; i<n; i++) {
         for (unsigned int j = 0; j<n; j++) {
             W[i][j] = i==j ? 0 : INF;
-            P[i][j] = -1;
+            P[i][j] = i==j ? i : -1;
+
         }
         for (auto e: vertexSet[i]->adj) {
             int j = findVertexIdx(e.dest->info);
@@ -499,9 +519,9 @@ void Graph<T>::floydWarshallShortestPath()
         for (unsigned int i = 0; i<n; i++) {
             for (unsigned int j = 0; j<n; j++) {
 
-                if (W[i][k]==INF || W[k][j]==INF) {
-                    continue;
-                }
+//                if (W[i][k]==INF || W[k][j]==INF) {
+//                    continue;
+//                }
 
                 int val = W[i][k]+W[k][j];
                 if (val<W[i][j]) {
@@ -531,17 +551,100 @@ vector<T> Graph<T>::getFloydWarshallPath(const T& origin, const T& destination) 
     int i = findVertexIdx(origin);
     int j = findVertexIdx(destination);
 
+    for (int k = 0; k<vertexSet.size(); ++k) {
+        for (int l = 0; l<vertexSet.size(); ++l) {
+            std::cout << W[k][l] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    std::cout << i << j << std::endl;
+
     if (i==-1 || j==-1 || W[i][j]==INF) {
         std::cout << "Path not found\n";
         return res;
     }
-    for (; j!=-1; j = P[i][j]) {
+    for (; j!=i; j = P[i][j]) {
         res.push_back(vertexSet[j]->info);
     }
 
     reverse(res.begin(), res.end());
 
     std::cout << "Path calculated\n";
+    return res;
+}
+
+template<class T>
+Vertex<T>* Graph<T>::initSingleSource(const T& origin)
+{
+    for (Vertex<T>* vertex : this->vertexSet) {
+        vertex->visited = false;
+        vertex->dist = INF;
+        vertex->path = NULL;
+    }
+
+    Vertex<T>* origin_vertex = findVertex(origin);
+    if (origin_vertex == NULL) return NULL;
+
+    origin_vertex->dist = 0;
+    return origin_vertex;
+}
+
+template<class T>
+bool Graph<T>::relax(Vertex<T>* u, Vertex<T>* v, double w)
+{
+    if (v->dist>u->dist+w) {
+        v->dist = u->dist+w;
+        v->path = u;
+        return true;
+    }
+
+    return false;
+}
+
+template<class T>
+void Graph<T>::dijkstraShortestPath(const T& origin)
+{
+    auto origin_vertex = initSingleSource(origin);
+
+    if (origin_vertex == NULL) return;
+
+    MutablePriorityQueue<Vertex<T>> queue;
+
+    queue.insert(origin_vertex);
+
+    while (!queue.empty()) {
+        Vertex<T>* min_vertex = queue.extractMin();
+
+        for (Edge<T> edge : min_vertex->adj) {
+            if (relax(min_vertex, edge.dest, edge.weight)) {
+                if (queue.find(edge.dest)) {
+                    queue.decreaseKey(edge.dest);
+                }
+                else {
+                    queue.insert(edge.dest);
+                }
+            }
+        }
+    }
+}
+
+template<class T>
+vector<T> Graph<T>::getPath(const T& origin, const T& dest) const
+{
+    vector<T> res;
+
+    Vertex<T>* dest_vertex = findVertex(dest);
+
+    if (dest_vertex==nullptr || dest_vertex->dist==INF) return res;
+
+    while (dest_vertex!=nullptr) {
+        res.push_back(dest_vertex->info);
+        dest_vertex = dest_vertex->path;
+    }
+
+    reverse(res.begin(), res.end());
+
     return res;
 }
 

@@ -40,6 +40,8 @@ public:
 
     bool operator==(const Location& l1);
 
+    bool operator<(const Location& l1);
+
     Location();
 };
 
