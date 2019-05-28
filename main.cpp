@@ -58,10 +58,20 @@ GraphViewer* init_viewer(int width, int height)
     return gv;
 }
 
+//return true if an id has been used
+bool checkUsedId(int id) {
+    for (int i = 0; i < usedLocationIds.size(); i++) {
+        if (id == usedLocationIds[i]) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 std::vector<Item*> itemFactory(int numItems, vector<Vertex<Location>*> vertexSet)
 {
     vector<Item*> res;
-    srand(time(NULL));
 
     vector<string> dest_first_name = {"Joaquim", "João", "Gonçalo", "Leonardo", "Sofia", "Pedro", "Ana", "Mariana",
                                       "Joana"};
@@ -72,6 +82,11 @@ std::vector<Item*> itemFactory(int numItems, vector<Vertex<Location>*> vertexSet
 
         int locationIndex = rand()%vertexSet.size();
         int locationID = vertexSet[locationIndex]->getInfo()->getID();
+
+
+        if (checkUsedId(locationID)) {
+            continue;
+        }
 
         usedLocationIds.push_back(locationID);
         int weight = rand()%MAX_WEIGHT+1;
@@ -188,7 +203,7 @@ int main(int argc, char* argv[])
     compute_path(graph, deliveries, path, delivery_queue);
 
     cout << "------------------\n";
-    for (auto &l : path) {
+    for (Location &l : path) {
         std::cout << l.getID() << endl;
     }
     cout << "------------------\n";
@@ -200,6 +215,7 @@ int main(int argc, char* argv[])
         }
         gv->setVertexColor(path[path.size()-1].getID(), "red");
     }
+
 
     freeItems(items);
 
